@@ -188,10 +188,30 @@ class SSDHead(Model):
             predictor_sizes.append(int_shape(_bbox_conf)[1:3])
         self._predictor_sizes = np.array(predictor_sizes)
 
+        config = {'img_height': img_height,
+                  'img_width': img_width,
+                  'image_size': (img_height, img_width),
+                  'n_classes': n_classes - 1,
+                  'predictor_sizes': self._predictor_sizes,
+                  'min_scale': None,
+                  'max_scale': None,
+                  'scales': scales,
+                  'aspect_ratios_per_layer': aspect_ratios_per_layer,
+                  'two_boxes_for_ar1': two_boxes_for_ar1,
+                  'steps': steps,
+                  'offsets': offsets,
+                  'clip_boxes': clip_boxes,
+                  'variances': variances,
+                  'coords': coords,
+                  'normalize_coords': normalize_coords,
+                  'output_sizes': int_shape(predictions)[1:3]}
+        self._config = config
 
     def get_predictor_sizes(self):
         return self._predictor_sizes
 
+    def get_config(self):
+        return self._config
 
     def _clean_conv_layer(self, inputs, filters, kernel_size=3, name=None):
         return Conv2D(
