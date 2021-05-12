@@ -55,7 +55,7 @@ class WiderFaceDataset:
         self._output_label_shape = encoder_config['output_sizes']
 
         self._argument = argument
-        self._num_parallel_calls = 2
+        self._num_parallel_calls = 4
         self._read_buffer_size = 256 * (1024 * 1024)
         self._tfrecords_shuffle_buffer_size = 512
         self._batch_size = batch_size
