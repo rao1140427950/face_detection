@@ -16,3 +16,5 @@ MODEL_NAME = 'ssd_resnet50'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
+
+TEST_IMAGE_PATH = 'images/test_image_1.jpg'
