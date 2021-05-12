@@ -64,17 +64,19 @@ else:
     print('No weights file found. Skip loading weights.')
 
 train_dataset = WiderFaceDataset(
-    '/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
-    '/home/raosj/datasets/wider_face/WIDER_train/images',
     net.get_config(),
-    argument=True,
+    txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
+    image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
+    tfrecord_path='/home/raosj/datasets/wider_face/wider_train.tfrecords',
+    argument=False,
     batch_size=batch_size
 )
 
 val_dataset = WiderFaceDataset(
-    '/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
-    '/home/raosj/datasets/wider_face/WIDER_val/images',
     net.get_config(),
+    txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
+    image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
+    tfrecord_path='/home/raosj/datasets/wider_face/wider_val.tfrecords',
     argument=False,
     batch_size=batch_size
 )
@@ -92,8 +94,8 @@ checkpoint = ModelCheckpoint(
 
 lr_scheduler = LearningRateScheduler(SCHEDULE)
 
-train_samples = train_dataset.generate_dataset()
-val_samples = val_dataset.generate_dataset()
+train_samples = train_dataset.generate_dataset_from_tfrecords()
+val_samples = val_dataset.generate_dataset_from_tfrecords()
 
 model.fit(
     x=train_samples,

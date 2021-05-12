@@ -1,4 +1,4 @@
-GPU = '6, 7'
+GPU = '7'
 
 IMAGE_SIZE = 512
 
@@ -11,7 +11,7 @@ SCHEDULE = [4, 8, 12]
 MOMENTUM = 0.8
 
 EPOCHS = 16
-BATCH_SIZE = 10
+BATCH_SIZE = 5
 MODEL_NAME = 'ssd_resnet50'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 

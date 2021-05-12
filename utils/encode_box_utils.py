@@ -255,6 +255,7 @@ class SSDInputEncoder:
         self.steps_diag = [] # Horizontal and vertical distances between any two boxes for each predictor layer
         self.offsets_diag = [] # Offsets for each predictor layer
         self.centers_diag = [] # Anchor box center points as `(cy, cx)` for each predictor layer
+        self.y_encoding_template = None
 
         # Iterate over all predictor layers and compute the anchor boxes for each one.
         for i in range(len(self.predictor_sizes)):
@@ -573,6 +574,13 @@ class SSDInputEncoder:
             the anchor boxes and the 4 variance values.
         """
         # Tile the anchor boxes for each predictor layer across all batch items.
+        # if self.y_encoding_template is not None:
+        #     y_encoding_template = self.y_encoding_template.copy()
+        #     if diagnostics:
+        #         return y_encoding_template, self.centers_diag, self.wh_list_diag, self.steps_diag, self.offsets_diag
+        #     else:
+        #         return y_encoding_template
+
         boxes_batch = []
         for boxes in self.boxes_list:
             # Prepend one dimension to `self.boxes_list` to account for the batch size and tile it along.
@@ -605,6 +613,7 @@ class SSDInputEncoder:
         #    shape as the SSD model output tensor. The content of this tensor is irrelevant, we'll just use
         #    `boxes_tensor` a second time.
         y_encoding_template = np.concatenate((classes_tensor, boxes_tensor, boxes_tensor, variances_tensor), axis=2)
+        self.y_encoding_template = y_encoding_template
 
         if diagnostics:
             return y_encoding_template, self.centers_diag, self.wh_list_diag, self.steps_diag, self.offsets_diag
