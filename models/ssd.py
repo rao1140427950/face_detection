@@ -231,9 +231,9 @@ class SSD_ResNet50(SSDHead):
             self,
             input_shape=(512, 512, 3),
             kernel_regularizer=l2(0.0008),
-            repetitions=(3, 4, 6, 3),
             out_layer_names='auto',
     ):
+        repetitions = (3, 4, 6, 3)
         resnet = ResNet(
             input_shape=input_shape,
             kernel_regularizer=kernel_regularizer,
@@ -267,9 +267,9 @@ class SSD_ResNet101(SSDHead):
             self,
             input_shape=(512, 512, 3),
             kernel_regularizer=l2(0.0008),
-            repetitions=(3, 4, 23, 3),
             out_layer_names='auto',
     ):
+        repetitions = (3, 4, 23, 3)
         resnet = ResNet(
             input_shape=input_shape,
             kernel_regularizer=kernel_regularizer,

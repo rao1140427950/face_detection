@@ -9,62 +9,6 @@ from utils.model import Model
 
 class ResNet(Model):
 
-    @staticmethod
-    def identity_block(input_tensor, kernel_size, filters, block):
-
-        filters1, filters2, filters3 = filters
-        if K.image_data_format() == 'channels_last':
-            bn_axis = 3
-        else:
-            bn_axis = 1
-
-        x = Conv2D(filters1, (1, 1), name=block + '_1_conv', kernel_initializer='he_normal')(input_tensor)
-        x = BatchNormalization(axis=bn_axis, name=block + '_1_bn')(x)
-        x = Activation('relu', name=block + '_1_relu')(x)
-
-        x = Conv2D(filters2, kernel_size, kernel_initializer='he_normal',
-                   padding='same', name=block + '_2_conv')(x)
-        x = BatchNormalization(axis=bn_axis, name=block + '_2_bn')(x)
-        x = Activation('relu', name=block + '_2_relu')(x)
-
-        x = Conv2D(filters3, (1, 1), name=block + '_3_conv', kernel_initializer='he_normal')(x)
-        x = BatchNormalization(axis=bn_axis, name=block + '_3_bn')(x)
-
-        x = Add(name=block + '_add')([x, input_tensor])
-        x = Activation('relu', name=block + '_out')(x)
-        return x
-
-    @staticmethod
-    def conv_block(input_tensor, kernel_size, filters, block, strides=(2, 2)):
-
-        filters1, filters2, filters3 = filters
-        if K.image_data_format() == 'channels_last':
-            bn_axis = 3
-        else:
-            bn_axis = 1
-
-        x = Conv2D(filters1, (1, 1), strides=strides, kernel_initializer='he_normal',
-                   name=block + '_1_conv')(input_tensor)
-        x = BatchNormalization(axis=bn_axis, name=block + '_1_bn')(x)
-        x = Activation('relu', name=block + '_1_relu')(x)
-
-        x = Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal',
-                   name=block + '_2_conv')(x)
-        x = BatchNormalization(axis=bn_axis, name=block + '_2_bn')(x)
-        x = Activation('relu', name=block + '_2_relu')(x)
-
-        x = Conv2D(filters3, (1, 1), name=block + '_3_conv', kernel_initializer='he_normal')(x)
-        x = BatchNormalization(axis=bn_axis, name=block + '_3_bn')(x)
-
-        shortcut = Conv2D(filters3, (1, 1), strides=strides, kernel_initializer='he_normal',
-                          name=block + '_0_conv')(input_tensor)
-        shortcut = BatchNormalization(axis=bn_axis, name=block + '_0_bn')(shortcut)
-
-        x = Add(name=block + '_add')([x, shortcut])
-        x = Activation('relu', name=block + '_out')(x)
-        return x
-
-
     def __init__(self,
                  input_shape=(224, 224, 3),
                  kernel_regularizer=l2(0.0008),
@@ -129,6 +73,62 @@ class ResNet(Model):
 
         super().__init__(basemodel_names=[], model=model, kernel_regularizer=kernel_regularizer)
         # self.add_kernel_regularizer(kernel_regularizer)
+
+    @staticmethod
+    def identity_block(input_tensor, kernel_size, filters, block):
+
+        filters1, filters2, filters3 = filters
+        if K.image_data_format() == 'channels_last':
+            bn_axis = 3
+        else:
+            bn_axis = 1
+
+        x = Conv2D(filters1, (1, 1), name=block + '_1_conv', kernel_initializer='he_normal')(input_tensor)
+        x = BatchNormalization(axis=bn_axis, name=block + '_1_bn')(x)
+        x = Activation('relu', name=block + '_1_relu')(x)
+
+        x = Conv2D(filters2, kernel_size, kernel_initializer='he_normal',
+                   padding='same', name=block + '_2_conv')(x)
+        x = BatchNormalization(axis=bn_axis, name=block + '_2_bn')(x)
+        x = Activation('relu', name=block + '_2_relu')(x)
+
+        x = Conv2D(filters3, (1, 1), name=block + '_3_conv', kernel_initializer='he_normal')(x)
+        x = BatchNormalization(axis=bn_axis, name=block + '_3_bn')(x)
+
+        x = Add(name=block + '_add')([x, input_tensor])
+        x = Activation('relu', name=block + '_out')(x)
+        return x
+
+    @staticmethod
+    def conv_block(input_tensor, kernel_size, filters, block, strides=(2, 2)):
+
+        filters1, filters2, filters3 = filters
+        if K.image_data_format() == 'channels_last':
+            bn_axis = 3
+        else:
+            bn_axis = 1
+
+        x = Conv2D(filters1, (1, 1), strides=strides, kernel_initializer='he_normal',
+                   name=block + '_1_conv')(input_tensor)
+        x = BatchNormalization(axis=bn_axis, name=block + '_1_bn')(x)
+        x = Activation('relu', name=block + '_1_relu')(x)
+
+        x = Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal',
+                   name=block + '_2_conv')(x)
+        x = BatchNormalization(axis=bn_axis, name=block + '_2_bn')(x)
+        x = Activation('relu', name=block + '_2_relu')(x)
+
+        x = Conv2D(filters3, (1, 1), name=block + '_3_conv', kernel_initializer='he_normal')(x)
+        x = BatchNormalization(axis=bn_axis, name=block + '_3_bn')(x)
+
+        shortcut = Conv2D(filters3, (1, 1), strides=strides, kernel_initializer='he_normal',
+                          name=block + '_0_conv')(input_tensor)
+        shortcut = BatchNormalization(axis=bn_axis, name=block + '_0_bn')(shortcut)
+
+        x = Add(name=block + '_add')([x, shortcut])
+        x = Activation('relu', name=block + '_out')(x)
+        return x
+
 
 
 if __name__ == '__main__':

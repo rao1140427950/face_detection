@@ -55,7 +55,7 @@ class WiderFaceDataset:
         self._argument = argument
         self._num_parallel_calls = 4
         self._batch_size = batch_size
-        self._prefetch_buffer_size = 4
+        self._prefetch_buffer_size = 8
         self._index_dataset = None
         self._image_dataset = None
         self._batch_dataset = None
@@ -70,7 +70,6 @@ class WiderFaceDataset:
         if transform_config is not None:
             self._transform_config.update(transform_config)
 
-        self._read_txt_annos()
 
     def _read_txt_annos(self):
         if self._annos is not None:
@@ -102,7 +101,7 @@ class WiderFaceDataset:
 
         return annos
 
-    def _transforms(self, image, boxes):
+    def _transforms(self, image, boxes, class_id):
         image = tf.image.random_brightness(image, self._transform_config['brightness'])
         image = tf.image.random_hue(image, self._transform_config['hue'])
         image = tf.image.random_contrast(
@@ -110,7 +109,7 @@ class WiderFaceDataset:
         image = tf.image.random_saturation(
             image, 1. - self._transform_config['saturation'], 1. + self._transform_config['saturation']
         )
-        return image, boxes
+        return image, boxes, class_id
 
     @staticmethod
     def _encode_image(image):
@@ -130,6 +129,7 @@ class WiderFaceDataset:
             h, w, c = K.int_shape(image)
 
             n_boxes = len(boxes)
+            class_id = np.ones((n_boxes, 1), dtype=np.float)
             boxes = np.array(boxes, dtype=np.float)
             # (xmin, ymin, w, h) to (xmin, ymin, xmax, ymax)
             boxes[:, 2] = boxes[:, 0] + boxes[:, 2]
@@ -148,11 +148,18 @@ class WiderFaceDataset:
             image *= 2
 
             if self._argument:
-                image, boxes = self._transforms(image, boxes)
+                image, boxes, class_id = self._transforms(image, boxes, class_id)
+
             image = tf.image.resize(image, self._image_size)
 
-            # (cx, cy, w, h) to (class_id, cx, cy, w, h)
-            class_id = np.ones((n_boxes, 1), dtype=np.float)
+            # restore the coords
+            h, w = self._image_size
+            boxes[:, 0] = boxes[:, 0] * w
+            boxes[:, 2] = boxes[:, 2] * w
+            boxes[:, 1] = boxes[:, 1] * h
+            boxes[:, 3] = boxes[:, 3] * h
+
+            # (xmin, ymin, xmax, ymax) to (xmin, ymin, xmax, ymax)
             gt_labels = np.concatenate([class_id, boxes], axis=1)
             gt_encoded = self._input_encoder([gt_labels])[0]
 
@@ -161,8 +168,15 @@ class WiderFaceDataset:
         imag, gt = tf.py_function(py_map_single_index, inp=[index], Tout=(tf.float32, tf.float32))
         return tf.cast(imag, tf.float32), tf.cast(gt, tf.float32)
 
+    def generate_dataset_from_tfrecords(self):
+        pass
 
-    def generate_dataset(self):
+    def image_file_to_tfrecords(self):
+        self._read_txt_annos()
+
+
+    def generate_dataset_from_image_file(self):
+        self._read_txt_annos()
         self._index_dataset = tf.data.Dataset.range(self._n_samples).shuffle(self._n_samples)
         self._image_dataset = self._index_dataset.map(self._map_single_index,
                                                       num_parallel_calls=self._num_parallel_calls)
@@ -180,9 +194,12 @@ if __name__ == '__main__':
         ssd.get_config(),
     )
     # dataset.read_txt_annos()
-    samples = dataset.generate_dataset()
+    samples = dataset.generate_dataset_from_image_file()
+    cnt = 0
     for sample in samples:
         image0, label0 = sample
+        print(cnt)
+        cnt += 1
         for img, lb in zip(image0, label0):
             img = img.numpy()
             lb = lb.numpy()
@@ -190,4 +207,4 @@ if __name__ == '__main__':
             print(np.shape(lb))
             img /= 2.0
             img += 0.5
-            _show(img)
+            # _show(img)
