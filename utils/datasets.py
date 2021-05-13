@@ -107,6 +107,7 @@ class WiderFaceDataset:
 
         return annos
 
+    # Data argumentation
     def _transforms(self, image, boxes, class_id):
         image = tf.image.random_brightness(image, self._transform_config['brightness'])
         image = tf.image.random_hue(image, self._transform_config['hue'])

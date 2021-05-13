@@ -5,6 +5,10 @@ import tensorflow as tf
 
 
 class Model(metaclass=abc.ABCMeta):
+    """
+    A simple abstract class.
+    Implement some useful functions.
+    """
 
     def __init__(self, basemodel_names=None, model=None, basemodel=None, kernel_regularizer=None, r=4):
         if basemodel_names is None:

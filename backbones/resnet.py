@@ -8,6 +8,16 @@ from utils.model import Model
 
 
 class ResNet(Model):
+    """
+    model name | repetitions
+    resnet34   | (2, 2, 2, 2)
+    resnet50   | (3, 4, 6, 3)
+    resnet101  | (3, 4, 23, 3)
+    resnet152  | (3, 8, 36, 3)
+
+    The implementation is compatible of tf.keras.applications.resnet
+    Layer names are the same
+    """
 
     def __init__(self,
                  input_shape=(224, 224, 3),

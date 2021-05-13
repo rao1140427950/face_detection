@@ -10,7 +10,7 @@ from utils.box_utils import compute_nms, decode
 from utils.anchor_utils import generate_anchors
 import utils.transforms as trans
 
-
+# Build model
 if MODEL == 'ssd_resnet50':
     net = ssd.SSD_ResNet50(
         input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
@@ -23,22 +23,28 @@ net.model.compile(
     loss=SSDLoss(),
 )
 
+# Load weights from checkpoints
 checkpoint_path = WORK_DIR + '/checkpoint-' + MODEL_NAME + '.h5'
 net.load_weights(checkpoint_path)
 
+# Load test image
 orig_image = cv.imread(TEST_IMAGE_PATH)
 orig_image = cv.cvtColor(orig_image, cv.COLOR_BGR2RGB)
 img_width = img_height = IMAGE_SIZE
 
+# Preprocess image
 input_image = cv.resize(orig_image, (512, 512), interpolation=cv.INTER_LINEAR)
 input_image = np.array([input_image], dtype=np.float32)
 # normalize image
 input_image = trans.normalize_image(input_image)
+
+# Get predictions
 y_pred = net.model.predict(input_image)
 confidence_threshold = 0.3
 confs = y_pred[:, :, :-4]
 locs = y_pred[:, :, -4:]
 
+# Decode predictions
 confs = tf.squeeze(confs, 0)
 locs = tf.squeeze(locs, 0)
 
@@ -74,6 +80,7 @@ for c in range(1, 2):
 out_boxes = tf.concat(out_boxes, axis=0)
 out_scores = tf.concat(out_scores, axis=0)
 
+# Get boxes for visualize
 boxes = tf.clip_by_value(out_boxes, 0.0, 1.0).numpy()
 classes = np.array(out_labels)
 classes = np.expand_dims(classes, axis=1)

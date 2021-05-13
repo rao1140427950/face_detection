@@ -9,6 +9,7 @@ from utils.datasets import WiderFaceDataset
 from utils.callbacks import LearningRateScheduler
 import models.ssd as ssd
 
+# Configure environment
 os.environ['CUDA_VISIBLE_DEVICES'] = GPU
 tf.config.threading.set_inter_op_parallelism_threads(6)
 tf.config.threading.set_intra_op_parallelism_threads(6)
@@ -31,6 +32,7 @@ batch_size = BATCH_SIZE
 
 model_name = MODEL_NAME
 
+# Define filenames
 if not os.path.exists(WORK_DIR):
     os.mkdir(WORK_DIR)
 log_dir = WORK_DIR + '/' + model_name
@@ -38,6 +40,7 @@ output_model_file = WORK_DIR + '/' + model_name + '.h5'
 weight_file = WORK_DIR + '/' + model_name + '_weights.h5'
 checkpoint_path = WORK_DIR + '/checkpoint-' + model_name + '.h5'
 
+# For multi-gpu training
 strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
     if MODEL == 'ssd_resnet50':
@@ -55,15 +58,18 @@ with strategy.scope():
 
 model = net.model
 
+# Load weights by layer names
 if PRE_TRAINED_WEIGHTS is not None:
     net.load_weights_by_layer(PRE_TRAINED_WEIGHTS)
 
+# Load existing .h5 weights file
 if os.path.exists(weight_file):
     model.load_weights(weight_file, by_name=True, skip_mismatch=True)
     print('Found weights file: {}, load weights.'.format(weight_file))
 else:
     print('No weights file found. Skip loading weights.')
 
+# Build data pipeline
 train_dataset = WiderFaceDataset(
     SSD_CONFIG,
     txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
@@ -80,8 +86,10 @@ val_dataset = WiderFaceDataset(
     batch_size=batch_size
 )
 
+# Tensorboard
 tensorboard = TensorBoard(log_dir=log_dir, write_images=False)
 
+# Auto-save
 checkpoint = ModelCheckpoint(
     filepath=checkpoint_path,
     monitor='val_loss',
@@ -91,11 +99,13 @@ checkpoint = ModelCheckpoint(
     save_freq='epoch'
 )
 
+# Auto-decay learning rate
 lr_scheduler = LearningRateScheduler(SCHEDULE)
 
 train_samples = train_dataset.generate_dataset_from_imagefile()
 val_samples = val_dataset.generate_dataset_from_imagefile()
 
+# Start training
 model.fit(
     x=train_samples,
     validation_data=val_samples,

@@ -122,6 +122,11 @@ class AdvancedEarlyStopping(tf.keras.callbacks.Callback):
 class LearningRateScheduler(tf.keras.callbacks.LearningRateScheduler):
 
     def __init__(self, schedule):
+        """
+        Auto decay learning rate.
+        Arguments:
+            schedule: a list of integers. In which epoch the learning rate should be decayed.
+        """
 
         self._schedule = schedule
 

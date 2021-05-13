@@ -102,6 +102,7 @@ class SSDHead(Model):
 
         super().__init__(basemodel=backbone.model, model=model, kernel_regularizer=l2(l2_reg))
 
+
     def _clean_conv_layer(self, inputs, filters, kernel_size=3, name=None):
         return Conv2D(
             filters,
