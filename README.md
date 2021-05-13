@@ -6,7 +6,7 @@
 ### Detectors:
 - SSD
 
-### Unknown Issues:
+### Known Issues:
 - OOM while training. 
 
 ### TODOs:
