@@ -7,4 +7,8 @@
 - SSD
 
 ### Unknown Issues:
-- OOM while training. Data input pipeline needs to be optimized.
+- OOM while training. 
+
+### TODOs:
+- Optimize input data pipeline.
+- How to detect small faces.
