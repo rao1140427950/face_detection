@@ -36,7 +36,7 @@ input_image -= 0.5
 input_image *= 2
 y_pred = net.model.predict(input_image)
 
-confidence_threshold = 0.25
+confidence_threshold = 0.3
 
 decode = DecodeDetections(confidence_thresh=confidence_threshold,
                           iou_threshold=0.45,
@@ -77,6 +77,6 @@ for box in y_pred_thresh[0]:
     label = '{}: {:.2f}'.format(classes[int(box[0])], box[1])
     current_axis.add_patch(
         plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, color=(0., 0.9, 0.), fill=False, linewidth=2))
-    current_axis.text(xmin, ymin, label, size='x-large', color='white', bbox={'facecolor': (0., 0.9, 0.), 'alpha': 1.0})
+    # current_axis.text(xmin, ymin, label, size='x-small', color='white', bbox={'facecolor': (0., 0.9, 0.), 'alpha': 1.0})
 
 plt.show()
