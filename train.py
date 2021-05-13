@@ -4,7 +4,8 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from config import *
 from utils.losses import SSDLoss
-from utils.pipelines import WiderFacePipeline
+# from utils.pipelines import WiderFacePipeline
+from utils.datasets import WiderFaceDataset
 from utils.callbacks import LearningRateScheduler
 import models.ssd as ssd
 
@@ -63,7 +64,7 @@ if os.path.exists(weight_file):
 else:
     print('No weights file found. Skip loading weights.')
 
-train_dataset = WiderFacePipeline(
+train_dataset = WiderFaceDataset(
     SSD_CONFIG,
     txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
     image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
@@ -71,7 +72,7 @@ train_dataset = WiderFacePipeline(
     batch_size=batch_size
 )
 
-val_dataset = WiderFacePipeline(
+val_dataset = WiderFaceDataset(
     SSD_CONFIG,
     txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
     image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
@@ -92,18 +93,17 @@ checkpoint = ModelCheckpoint(
 
 lr_scheduler = LearningRateScheduler(SCHEDULE)
 
-# train_samples = train_dataset.generate_dataset_from_tfrecords()
-# val_samples = val_dataset.generate_dataset_from_tfrecords()
+train_samples = train_dataset.generate_dataset_from_imagefile()
+val_samples = val_dataset.generate_dataset_from_imagefile()
 
 model.fit(
-    x=train_dataset,
-    validation_data=val_dataset,
+    x=train_samples,
+    validation_data=val_samples,
     epochs=epochs,
     callbacks=[tensorboard, checkpoint, lr_scheduler],
     initial_epoch=start_epoch,
     shuffle=False,
     verbose=1,
-    workers=N_WORKERS,
 )
 
 model.save_weights(weight_file)

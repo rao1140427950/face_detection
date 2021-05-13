@@ -125,54 +125,20 @@ class WiderFaceDataset:
     def _decode_image_raw(image_raw):
         return tf.image.decode_jpeg(image_raw)
 
-    @staticmethod
-    def _bytes_feature(value):
-        """Returns a bytes_list from a string / byte."""
-        if isinstance(value, type(tf.constant(0))):
-            value = value.numpy()  # BytesList won't unpack a string from an EagerTensor.
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-    @staticmethod
-    def _float_feature(value):
-        """Returns a float_list from a float / double."""
-        return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
-
-    @staticmethod
-    def _int64_feature(value):
-        """Returns an int64_list from a bool / enum / int / uint."""
-        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-    @staticmethod
-    def _int64_list_feature(list_value):
-        """Returns an int64_list from a bool / enum / int / uint list."""
-        return tf.train.Feature(int64_list=tf.train.Int64List(value=list_value))
-
-    @staticmethod
-    def _float_list_feature(list_value):
-        """Returns an float_list from a bool / enum / int / uint list."""
-        return tf.train.Feature(float_list=tf.train.FloatList(value=list_value))
-
     def _process_single_image_with_bboxes(self, image, boxes):
-        h, w, c = tf.split(tf.shape(image), 3)
-        h = tf.cast(h, tf.float32)
-        w = tf.cast(w, tf.float32)
-        # n_boxes = K.int_shape(boxes)[0]
-        # print(h, w, c, n_boxes)
-        class_id = tf.ones((tf.shape(boxes)[0],), dtype=np.float)
-        boxes = tf.cast(boxes, tf.float32)
-        # boxes = np.array(boxes, dtype=np.float)
+        h, w, c = K.int_shape(image)
+        n_boxes = len(boxes)
+        class_id = np.ones((n_boxes,), dtype=np.float32)
+        boxes = np.array(boxes, dtype=np.float32)
         # (xmin, ymin, w, h) to (xmin, ymin, xmax, ymax)
-        boxes = tf.split(boxes, 4, axis=1)
-        boxes[2] = boxes[0] + boxes[2] - 1
-        boxes[3] = boxes[1] + boxes[3] - 1
-        boxes[0] -= 1
-        boxes[1] -= 1
+        boxes[:, 2] = boxes[:, 0] + boxes[:, 2]
+        boxes[:, 3] = boxes[:, 1] + boxes[:, 3]
+        boxes -= 1
         # normalize coords
-        boxes[0] /= w
-        boxes[2] /= w
-        boxes[1] /= h
-        boxes[3] /= h
-        boxes = tf.concat(boxes, axis=1)
+        boxes[:, 0] = boxes[:, 0] / w
+        boxes[:, 2] = boxes[:, 2] / w
+        boxes[:, 1] = boxes[:, 1] / h
+        boxes[:, 3] = boxes[:, 3] / h
 
         # convert image type
         image = tf.cast(image, tf.float32)
@@ -186,7 +152,7 @@ class WiderFaceDataset:
         class_id, boxes = compute_target(self._anchors, boxes, class_id)
 
         # To onehot
-        class_id = tf.one_hot(tf.cast(class_id, tf.int32), 2)
+        class_id = tf.one_hot(tf.cast(class_id, tf.int32), 2, dtype=tf.float32)
 
         boxes = tf.cast(boxes, tf.float32)
 
@@ -200,78 +166,17 @@ class WiderFaceDataset:
             filepath, boxes = self._annos[p]
             image_raw = tf.io.read_file(filepath)
             image = self._decode_image_raw(image_raw)
-            return image, boxes
+            return self._process_single_image_with_bboxes(image, boxes)
 
         imag, bbox = tf.py_function(py_map_single_index, inp=[index], Tout=(tf.float32, tf.float32))
         return tf.cast(imag, tf.float32), tf.cast(bbox, tf.float32)
-
-    def _map_single_example(self, image_features):
-        image_raw = image_features['image_raw']
-        boxes = image_features['bboxes'].values
-        boxes = tf.reshape(boxes, (-1, 4))
-        image = self._decode_image_raw(image_raw)
-        # print(boxes, image)
-
-        return self._process_single_image_with_bboxes(image, boxes)
-
-
-    def _image_example(self, image_bytes, bboxes, filepath_bytes):
-        feature = {
-            'filepath': self._bytes_feature(filepath_bytes),
-            'image_raw': self._bytes_feature(image_bytes),
-            'bboxes': self._float_list_feature(bboxes),
-        }
-        return tf.train.Example(features=tf.train.Features(feature=feature))
-
-    def _parse_image_function(self, example_proto):
-        return tf.io.parse_single_example(example_proto, self._image_feature_description)
-
-    def imagefile_to_tfrecords(self):
-        self._read_txt_annos()
-        assert self._tfrecord_path is not None
-        with tf.io.TFRecordWriter(self._tfrecord_path) as writer:
-            for anno in self._annos:
-                filepath, boxes  = anno
-                image_string = open(filepath, 'rb').read()
-                bboxes = np.array(boxes, dtype=np.float32).reshape((-1))
-                tf_example = self._image_example(image_string, bboxes, filepath.encode())
-                writer.write(tf_example.SerializeToString())
-                print('Image', filepath, 'processed.')
-
-
-    def generate_dataset_from_tfrecords(self):
-        if self._tfrecord_path is None:
-            raise ValueError('TFRecord path can not be None.')
-        elif isinstance(self._tfrecord_path, list):
-            for p in self._tfrecord_path:
-               if not os.path.exists(p):
-                   raise ValueError('TFRecord path `%s` does not exist.' % p)
-            tpath = self._tfrecord_path
-        else:
-            if not os.path.exists(self._tfrecord_path):
-                raise ValueError('TFRecord path `%s` does not exist.' % self._tfrecord_path)
-            tpath = [self._tfrecord_path]
-
-        self._raw_image_dataset = tf.data.TFRecordDataset(tpath, buffer_size=self._read_buffer_size)
-        self._shuffle_image_dataset = self._raw_image_dataset.shuffle(self._tfrecords_shuffle_buffer_size)
-        self._parsed_image_dataset = self._shuffle_image_dataset.map(self._parse_image_function)
-        self._decoded_image_dataset = self._parsed_image_dataset.map(self._map_single_example,
-                                                                   num_parallel_calls=self._num_parallel_calls)
-        # self._encoded_dataset = self._decoded_image_dataset.map(self._process_single_image_with_bboxes,
-        #                                                         num_parallel_calls=self._num_parallel_calls)
-        self._batch_dataset = self._decoded_image_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
-        return self._batch_dataset
-
-
 
     def generate_dataset_from_imagefile(self):
         self._read_txt_annos()
         self._index_dataset = tf.data.Dataset.range(self._n_samples).shuffle(self._n_samples)
         self._image_dataset = self._index_dataset.map(self._map_single_index,
                                                       num_parallel_calls=self._num_parallel_calls)
-        self._encoded_dataset = self._image_dataset.map(self._process_single_image_with_bboxes,
-                                                        num_parallel_calls=self._num_parallel_calls)
-        self._batch_dataset = self._encoded_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
+        self._batch_dataset = self._image_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
         return self._batch_dataset
 
 
@@ -286,9 +191,9 @@ if __name__ == '__main__':
         tfrecord_path='/home/raosj/datasets/wider_face/wider_val.tfrecords',
     )
     # dataset.read_txt_annos()
-    # samples = dataset.generate_dataset_from_imagefile()
+    samples = dataset.generate_dataset_from_imagefile()
     # dataset.imagefile_to_tfrecords()
-    samples = dataset.generate_dataset_from_tfrecords()
+    # samples = dataset.generate_dataset_from_tfrecords()
     cnt = 0
     for sample in samples:
         image0, label0 = sample
@@ -300,5 +205,5 @@ if __name__ == '__main__':
             # print(img.min(), img.max())
             print(np.shape(lb))
             img = trans.restore_normalized_image_to01(img)
-            img += 0.5
-            # _show(img)
+            # img += 0.5
+            _show(img)
