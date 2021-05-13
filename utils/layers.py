@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import InputSpec, Layer
 import sys
 sys.path.append('..')
-from utils.bounding_box_utils import convert_coordinates
+from deprecated.bounding_box_utils import convert_coordinates
 
 
 class AnchorBoxes(Layer):

@@ -7,8 +7,8 @@ Original code: https://github.com/rao1140427950/ssd_keras/blob/master/ssd_encode
 import numpy as np
 import sys
 sys.path.append('..')
-from utils.bounding_box_utils import iou, convert_coordinates
-from utils.match_utils import match_bipartite_greedy, match_multi
+from deprecated.bounding_box_utils import iou, convert_coordinates
+from deprecated.match_utils import match_bipartite_greedy, match_multi
 
 class SSDInputEncoder:
     """

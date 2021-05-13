@@ -7,8 +7,10 @@ import math
 from random import shuffle
 import matplotlib.pyplot as plt
 sys.path.append('..')
-from utils.encode_box_utils import SSDInputEncoder
-from models.ssd import SSD_ResNet50
+from utils.box_utils import compute_target
+from utils.anchor_utils import generate_anchors
+import utils.transforms as trans
+from config import SSD_CONFIG
 
 
 def _show(image, label=None):
@@ -24,11 +26,11 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
     def __init__(
             self,
             encoder_config,
-            txt_annos_path=None,
-            image_root_dir=None,
+            txt_annos_path,
+            image_root_dir,
             transform_config=None,
             argument=True,
-            batch_size=8,
+            batch_size=0,
     ):
 
         self._txt_annos_path = txt_annos_path
@@ -36,24 +38,6 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
         self._annos = []
         self._n_samples = 0
         self._image_size = encoder_config['image_size']
-        self._input_encoder = SSDInputEncoder(
-            img_height=encoder_config['img_height'],
-            img_width=encoder_config['img_width'],
-            n_classes=encoder_config['n_classes'],
-            predictor_sizes=encoder_config['predictor_sizes'],
-            min_scale=encoder_config['min_scale'],
-            max_scale=encoder_config['max_scale'],
-            scales=encoder_config['scales'],
-            aspect_ratios_per_layer=encoder_config['aspect_ratios_per_layer'],
-            two_boxes_for_ar1=encoder_config['two_boxes_for_ar1'],
-            steps=encoder_config['steps'],
-            offsets=encoder_config['offsets'],
-            clip_boxes=encoder_config['clip_boxes'],
-            variances=encoder_config['variances'],
-            coords=encoder_config['coords'],
-            normalize_coords=encoder_config['normalize_coords'],
-        )
-        self._output_label_shape = encoder_config['output_sizes']
 
         self._argument = argument
         self._batch_size = batch_size
@@ -68,6 +52,7 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
         if transform_config is not None:
             self._transform_config.update(transform_config)
 
+        self._anchors = generate_anchors(encoder_config)
         self._read_txt_annos()
         shuffle(self._annos)
 
@@ -108,21 +93,28 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
         return annos
 
     def __len__(self):
-        return math.ceil(len(self._annos) / self._batch_size)
+        if self._batch_size > 0:
+            return math.ceil(len(self._annos) / self._batch_size)
+        else:
+            return len(self._annos)
 
     def on_epoch_end(self):
         shuffle(self._annos)
 
     def __getitem__(self, idx):
-        batch_annos = self._annos[idx * self._batch_size:(idx + 1) * self._batch_size]
-        batch_images = []
-        batch_gts = []
-        for anno in batch_annos:
-            _image, _gt = self._get_single_item(anno)
-            batch_images.append(np.expand_dims(_image.astype(np.float32), axis=0))
-            batch_gts.append(np.expand_dims(_gt.astype(np.float32), axis=0))
+        if self._batch_size > 0:
+            batch_annos = self._annos[idx * self._batch_size:(idx + 1) * self._batch_size]
+            batch_images = []
+            batch_gts = []
+            for anno in batch_annos:
+                _image, _gt = self._get_single_item(anno)
+                batch_images.append(tf.expand_dims(_image, axis=0))
+                batch_gts.append(tf.expand_dims(_gt, axis=0))
 
-        return np.concatenate(batch_images, axis=0), np.concatenate(batch_gts, axis=0)
+            return tf.concat(batch_images, axis=0), tf.concat(batch_gts, axis=0)
+        else:
+            anno = self._annos[idx]
+            return self._get_single_item(anno)
 
     def _transforms(self, image, boxes, class_id):
         image = tf.image.random_brightness(image, self._transform_config['brightness'])
@@ -141,11 +133,12 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
 
         h, w, c = np.shape(_image)
         n_boxes = len(_boxes)
-        class_id = np.ones((n_boxes, 1), dtype=np.float)
-        boxes = np.array(_boxes, dtype=np.float)
+        class_id = np.ones((n_boxes,), dtype=np.float32)
+        boxes = np.array(_boxes, dtype=np.float32)
         # (xmin, ymin, w, h) to (xmin, ymin, xmax, ymax)
         boxes[:, 2] = boxes[:, 0] + boxes[:, 2]
         boxes[:, 3] = boxes[:, 1] + boxes[:, 3]
+        boxes -= 1
         # normalize coords
         boxes[:, 0] = boxes[:, 0] / w
         boxes[:, 2] = boxes[:, 2] / w
@@ -153,48 +146,63 @@ class WiderFacePipeline(tf.keras.utils.Sequence):
         boxes[:, 3] = boxes[:, 3] / h
 
         # convert image type
-        _image = _image.astype(np.float)
+        _image = _image.astype(np.float32)
         # normalize image
-        _image /= 255.0
-        _image -= 0.5
-        _image *= 2
+        image = trans.normalize_image(_image)
 
         if self._argument:
-            _image, boxes, class_id = self._transforms(_image, boxes, class_id)
+            image, boxes, class_id = self._transforms(image, boxes, class_id)
 
-        _image = cv.resize(_image, self._image_size, interpolation=cv.INTER_LINEAR)
+        image = tf.image.resize(image, self._image_size)
+        class_id, boxes = compute_target(self._anchors, boxes, class_id)
 
-        # restore the coords
-        h, w = self._image_size
-        boxes[:, 0] = boxes[:, 0] * w
-        boxes[:, 2] = boxes[:, 2] * w
-        boxes[:, 1] = boxes[:, 1] * h
-        boxes[:, 3] = boxes[:, 3] * h
+        # To onehot
+        class_id = tf.one_hot(tf.cast(class_id, tf.int32), 2, dtype=tf.float32)
 
-        # (xmin, ymin, xmax, ymax) to (xmin, ymin, xmax, ymax)
-        gt_labels = np.concatenate([class_id, boxes], axis=1)
-        gt_encoded = self._input_encoder([gt_labels])[0]
-        # for n in range(10):
-        #     gt_encoded = self._input_encoder([gt_labels])[0]
-        #     print(n)
+        boxes = tf.cast(boxes, tf.float32)
 
-        return _image, gt_encoded
+        return image, tf.concat([class_id, boxes], axis=1)
 
+
+def generate_dataset(
+        config,
+        txt_annos_path,
+        image_root_dir,
+        argument=False,
+        batch_size=8,
+):
+    generater = WiderFacePipeline(
+        config,
+        txt_annos_path=txt_annos_path,
+        image_root_dir=image_root_dir,
+        argument=argument
+    )
+    return tf.data.Dataset.from_generator(
+        generater
+    ).batch(batch_size).prefetch(8)
 
 
 if __name__ == '__main__':
-    ssd = SSD_ResNet50()
-    samples = WiderFacePipeline(
-        ssd.get_config(),
+    # ssd = SSD_ResNet50()
+    # samples = WiderFacePipeline(
+    #     SSD_CONFIG,
+    #     txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
+    #     image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
+    #     argument=False
+    # )
+    samples = generate_dataset(
+        SSD_CONFIG,
         txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
         image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
-        argument=False
+        argument=False,
+        batch_size=8,
     )
 
-    image0, label0 = samples[0]
-    for img, lb in zip(image0, label0):
-        # print(img.min(), img.max())
-        print(np.shape(lb))
-        img /= 2.0
-        img += 0.5
-        _show(img)
+    for sample in samples:
+        image0, label0 = samples
+        for img, lb in zip(image0, label0):
+            # print(img.min(), img.max())
+            print(np.shape(lb))
+            img /= 2.0
+            img += 0.5
+            _show(img)

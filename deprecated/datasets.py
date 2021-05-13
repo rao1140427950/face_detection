@@ -1,13 +1,15 @@
 import numpy as np
-# import tensorflow_io as tfio
 import tensorflow as tf
 import warnings
 import os, sys
 import tensorflow.keras.backend as K
 import matplotlib.pyplot as plt
 sys.path.append('..')
-from utils.encode_box_utils import SSDInputEncoder
 from models.ssd import SSD_ResNet50
+from utils.box_utils import compute_target
+from utils.anchor_utils import generate_anchors
+import utils.transforms as trans
+from config import SSD_CONFIG
 
 def _show(image, label=None):
     plt.figure()
@@ -35,24 +37,6 @@ class WiderFaceDataset:
         self._annos = None
         self._n_samples = 0
         self._image_size = encoder_config['image_size']
-        self._input_encoder = SSDInputEncoder(
-            img_height=encoder_config['img_height'],
-            img_width=encoder_config['img_width'],
-            n_classes=encoder_config['n_classes'],
-            predictor_sizes=encoder_config['predictor_sizes'],
-            min_scale=encoder_config['min_scale'],
-            max_scale=encoder_config['max_scale'],
-            scales=encoder_config['scales'],
-            aspect_ratios_per_layer=encoder_config['aspect_ratios_per_layer'],
-            two_boxes_for_ar1=encoder_config['two_boxes_for_ar1'],
-            steps=encoder_config['steps'],
-            offsets=encoder_config['offsets'],
-            clip_boxes=encoder_config['clip_boxes'],
-            variances=encoder_config['variances'],
-            coords=encoder_config['coords'],
-            normalize_coords=encoder_config['normalize_coords'],
-        )
-        self._output_label_shape = encoder_config['output_sizes']
 
         self._argument = argument
         self._num_parallel_calls = 4
@@ -67,6 +51,9 @@ class WiderFaceDataset:
         self._shuffle_image_dataset = None
         self._parsed_image_dataset = None
         self._decoded_image_dataset = None
+        self._encoded_dataset = None
+
+        self._anchors = generate_anchors(encoder_config)
 
         self._transform_config = {
             'brightness': 0.15,
@@ -166,46 +153,45 @@ class WiderFaceDataset:
         return tf.train.Feature(float_list=tf.train.FloatList(value=list_value))
 
     def _process_single_image_with_bboxes(self, image, boxes):
-        h, w, c = K.int_shape(image)
-        n_boxes = len(boxes)
-        class_id = np.ones((n_boxes, 1), dtype=np.float)
-        boxes = np.array(boxes, dtype=np.float)
+        h, w, c = tf.split(tf.shape(image), 3)
+        h = tf.cast(h, tf.float32)
+        w = tf.cast(w, tf.float32)
+        # n_boxes = K.int_shape(boxes)[0]
+        # print(h, w, c, n_boxes)
+        class_id = tf.ones((tf.shape(boxes)[0],), dtype=np.float)
+        boxes = tf.cast(boxes, tf.float32)
+        # boxes = np.array(boxes, dtype=np.float)
         # (xmin, ymin, w, h) to (xmin, ymin, xmax, ymax)
-        boxes[:, 2] = boxes[:, 0] + boxes[:, 2]
-        boxes[:, 3] = boxes[:, 1] + boxes[:, 3]
+        boxes = tf.split(boxes, 4, axis=1)
+        boxes[2] = boxes[0] + boxes[2] - 1
+        boxes[3] = boxes[1] + boxes[3] - 1
+        boxes[0] -= 1
+        boxes[1] -= 1
         # normalize coords
-        boxes[:, 0] = boxes[:, 0] / w
-        boxes[:, 2] = boxes[:, 2] / w
-        boxes[:, 1] = boxes[:, 1] / h
-        boxes[:, 3] = boxes[:, 3] / h
+        boxes[0] /= w
+        boxes[2] /= w
+        boxes[1] /= h
+        boxes[3] /= h
+        boxes = tf.concat(boxes, axis=1)
 
         # convert image type
         image = tf.cast(image, tf.float32)
         # normalize image
-        image /= 255.0
-        image -= 0.5
-        image *= 2
+        image = trans.normalize_image(image)
 
         if self._argument:
             image, boxes, class_id = self._transforms(image, boxes, class_id)
 
         image = tf.image.resize(image, self._image_size)
+        class_id, boxes = compute_target(self._anchors, boxes, class_id)
 
-        # restore the coords
-        h, w = self._image_size
-        boxes[:, 0] = boxes[:, 0] * w
-        boxes[:, 2] = boxes[:, 2] * w
-        boxes[:, 1] = boxes[:, 1] * h
-        boxes[:, 3] = boxes[:, 3] * h
+        # To onehot
+        class_id = tf.one_hot(tf.cast(class_id, tf.int32), 2)
 
-        # (xmin, ymin, xmax, ymax) to (xmin, ymin, xmax, ymax)
-        gt_labels = np.concatenate([class_id, boxes], axis=1)
-        gt_encoded = self._input_encoder([gt_labels])[0]
-        # for n in range(10):
-        #     gt_encoded = self._input_encoder([gt_labels])[0]
-        #     print(n)
+        boxes = tf.cast(boxes, tf.float32)
 
-        return image, gt_encoded
+        return image, tf.concat([class_id, boxes], axis=1)
+
 
     def _map_single_index(self, index):
 
@@ -214,22 +200,20 @@ class WiderFaceDataset:
             filepath, boxes = self._annos[p]
             image_raw = tf.io.read_file(filepath)
             image = self._decode_image_raw(image_raw)
-            return self._process_single_image_with_bboxes(image, boxes)
+            return image, boxes
 
-        imag, gt = tf.py_function(py_map_single_index, inp=[index], Tout=(tf.float32, tf.float32))
-        return tf.cast(imag, tf.float32), tf.cast(gt, tf.float32)
+        imag, bbox = tf.py_function(py_map_single_index, inp=[index], Tout=(tf.float32, tf.float32))
+        return tf.cast(imag, tf.float32), tf.cast(bbox, tf.float32)
 
     def _map_single_example(self, image_features):
         image_raw = image_features['image_raw']
         boxes = image_features['bboxes'].values
+        boxes = tf.reshape(boxes, (-1, 4))
         image = self._decode_image_raw(image_raw)
+        # print(boxes, image)
 
-        def py_map_single_example(_image, _boxes):
-            _boxes = K.eval(_boxes).reshape((-1, 4))
-            return self._process_single_image_with_bboxes(_image, _boxes)
+        return self._process_single_image_with_bboxes(image, boxes)
 
-        imag, gt = tf.py_function(py_map_single_example, inp=[image, boxes], Tout=(tf.float32, tf.float32))
-        return tf.cast(imag, tf.float32), tf.cast(gt, tf.float32)
 
     def _image_example(self, image_bytes, bboxes, filepath_bytes):
         feature = {
@@ -273,6 +257,8 @@ class WiderFaceDataset:
         self._parsed_image_dataset = self._shuffle_image_dataset.map(self._parse_image_function)
         self._decoded_image_dataset = self._parsed_image_dataset.map(self._map_single_example,
                                                                    num_parallel_calls=self._num_parallel_calls)
+        # self._encoded_dataset = self._decoded_image_dataset.map(self._process_single_image_with_bboxes,
+        #                                                         num_parallel_calls=self._num_parallel_calls)
         self._batch_dataset = self._decoded_image_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
         return self._batch_dataset
 
@@ -283,7 +269,9 @@ class WiderFaceDataset:
         self._index_dataset = tf.data.Dataset.range(self._n_samples).shuffle(self._n_samples)
         self._image_dataset = self._index_dataset.map(self._map_single_index,
                                                       num_parallel_calls=self._num_parallel_calls)
-        self._batch_dataset = self._image_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
+        self._encoded_dataset = self._image_dataset.map(self._process_single_image_with_bboxes,
+                                                        num_parallel_calls=self._num_parallel_calls)
+        self._batch_dataset = self._encoded_dataset.batch(self._batch_size).prefetch(self._prefetch_buffer_size)
         return self._batch_dataset
 
 
@@ -292,7 +280,7 @@ class WiderFaceDataset:
 if __name__ == '__main__':
     ssd = SSD_ResNet50()
     dataset = WiderFaceDataset(
-        ssd.get_config(),
+        SSD_CONFIG,
         txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
         image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
         tfrecord_path='/home/raosj/datasets/wider_face/wider_val.tfrecords',
@@ -311,6 +299,6 @@ if __name__ == '__main__':
             lb = lb.numpy()
             # print(img.min(), img.max())
             print(np.shape(lb))
-            img /= 2.0
+            img = trans.restore_normalized_image_to01(img)
             img += 0.5
             # _show(img)

@@ -84,23 +84,13 @@ class SSDLoss(tf.keras.losses.Loss):
         """
         Compute the loss of the SSD model prediction against the ground truth.
         Arguments:
-            y_true (array): A Numpy array of shape `(batch_size, #boxes, #classes + 12)`,
+            y_true (array): A Numpy array of shape `(batch_size, #boxes, #classes + 4)`,
                 where `#boxes` is the total number of boxes that the model predicts
                 per image. Be careful to make sure that the index of each given
                 box in `y_true` is the same as the index for the corresponding
-                box in `y_pred`. The last axis must have length `#classes + 12` and contain
-                `[classes one-hot encoded, 4 ground truth box coordinate offsets, 8 arbitrary entries]`
-                in this order, including the background class. The last eight entries of the
-                last axis are not used by this function and therefore their contents are
-                irrelevant, they only exist so that `y_true` has the same shape as `y_pred`,
-                where the last four entries of the last axis contain the anchor box
-                coordinates, which are needed during inference. Important: Boxes that
-                you want the cost function to ignore need to have a one-hot
-                class vector of all zeros.
+                box in `y_pred`. The last axis must have length `#classes + 4`
             y_pred (Keras tensor): The model prediction. The shape is identical
-                to that of `y_true`, i.e. `(batch_size, #boxes, #classes + 12)`.
-                The last axis must contain entries in the format
-                `[classes one-hot encoded, 4 predicted box coordinate offsets, 8 arbitrary entries]`.
+                to that of `y_true`, i.e. `(batch_size, #boxes, #classes + 4)`.
         Returns:
             A scalar, the total multitask loss for classification and localization.
         """
@@ -109,14 +99,14 @@ class SSDLoss(tf.keras.losses.Loss):
 
         # 1: Compute the losses for class and box predictions for every box.
 
-        classification_loss = K.cast_to_floatx(self.log_loss(y_true[:,:,:-12], y_pred[:,:,:-12])) # Output shape: (batch_size, n_boxes)
-        localization_loss = K.cast_to_floatx(self.smooth_L1_loss(y_true[:,:,-12:-8], y_pred[:,:,-12:-8])) # Output shape: (batch_size, n_boxes)
+        classification_loss = K.cast_to_floatx(self.log_loss(y_true[:,:,:-4], y_pred[:,:,:-4])) # Output shape: (batch_size, n_classes)
+        localization_loss = K.cast_to_floatx(self.smooth_L1_loss(y_true[:,:,-4:], y_pred[:,:,-4:])) # Output shape: (batch_size, n_boxes)
 
         # 2: Compute the classification losses for the positive and negative targets.
 
         # Create masks for the positive and negative (`background` class) ground truth classes.
         negatives = y_true[:,:,0] # Tensor of shape (batch_size, n_boxes)
-        positives = K.cast_to_floatx(tf.reduce_max(y_true[:,:,1:-12], axis=-1)) # Tensor of shape (batch_size, n_boxes)
+        positives = K.cast_to_floatx(tf.reduce_max(y_true[:,:,1:-4], axis=-1)) # Tensor of shape (batch_size, n_boxes)
 
         # Count the number of positive boxes (classes 1 to n) in y_true across the whole batch.
         n_positive = tf.reduce_sum(positives)
