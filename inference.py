@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import cv2 as cv
 import numpy as np
@@ -24,8 +25,18 @@ net.model.compile(
 )
 
 # Load weights from checkpoints
-checkpoint_path = WORK_DIR + '/checkpoint-' + MODEL_NAME + '.h5'
-net.load_weights(checkpoint_path)
+# checkpoint_path = 'None'
+# checkpoint_path = WORK_DIR + '/checkpoint-' + MODEL_NAME + '.h5'
+checkpoint_path = WORK_DIR + '/checkpoint-ssd_resnet50_v2-04-4.71.h5'
+weight_file = WORK_DIR + '/' + MODEL_NAME + '_weights.h5'
+if os.path.exists(weight_file):
+    net.load_weights(weight_file)
+    print('Load {}.'.format(weight_file))
+elif os.path.exists(checkpoint_path):
+    net.load_weights(checkpoint_path)
+    print('Load {}.'.format(checkpoint_path))
+else:
+    raise ValueError("Checkpoint and weights file not found.")
 
 # Load test image
 orig_image = cv.imread(TEST_IMAGE_PATH)
@@ -33,14 +44,14 @@ orig_image = cv.cvtColor(orig_image, cv.COLOR_BGR2RGB)
 img_width = img_height = IMAGE_SIZE
 
 # Preprocess image
-input_image = cv.resize(orig_image, (512, 512), interpolation=cv.INTER_LINEAR)
+input_image = cv.resize(orig_image, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv.INTER_LINEAR)
 input_image = np.array([input_image], dtype=np.float32)
 # normalize image
 input_image = trans.normalize_image(input_image)
 
 # Get predictions
 y_pred = net.model.predict(input_image)
-confidence_threshold = 0.3
+confidence_threshold = 0.5
 confs = y_pred[:, :, :-4]
 locs = y_pred[:, :, -4:]
 
@@ -48,7 +59,7 @@ locs = y_pred[:, :, -4:]
 confs = tf.squeeze(confs, 0)
 locs = tf.squeeze(locs, 0)
 
-confs = tf.math.softmax(confs, axis=-1)
+# confs = tf.math.softmax(confs, axis=-1)
 classes = tf.math.argmax(confs, axis=-1)
 scores = tf.math.reduce_max(confs, axis=-1)
 
@@ -62,7 +73,7 @@ out_scores = []
 for c in range(1, 2):
     cls_scores = confs[:, c]
 
-    score_idx = cls_scores > 0.6
+    score_idx = cls_scores > confidence_threshold
     # cls_boxes = tf.boolean_mask(boxes, score_idx)
     # cls_scores = tf.boolean_mask(cls_scores, score_idx)
     cls_boxes = boxes[score_idx]
@@ -91,6 +102,7 @@ np.set_printoptions(precision=2, suppress=True, linewidth=90)
 print("Predicted boxes:\n")
 print('   class   conf xmin   ymin   xmax   ymax')
 y_pred = np.concatenate([classes, scores, boxes], axis=1)
+print(y_pred)
 
 # Display the image and draw the predicted boxes onto it.
 

@@ -38,14 +38,14 @@ if not os.path.exists(WORK_DIR):
 log_dir = WORK_DIR + '/' + model_name
 output_model_file = WORK_DIR + '/' + model_name + '.h5'
 weight_file = WORK_DIR + '/' + model_name + '_weights.h5'
-checkpoint_path = WORK_DIR + '/checkpoint-' + model_name + '.h5'
+checkpoint_path = WORK_DIR + '/checkpoint-' + model_name + '-{epoch:02d}-{val_loss:.2f}' + '.h5'
 
 def create_datasets():
     train_dataset = WiderFaceDataset(
         SSD_CONFIG,
         txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
         image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
-        argument=False,
+        argument=True,
         batch_size=batch_size
     )
 
