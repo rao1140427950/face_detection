@@ -22,14 +22,17 @@ INIT_LR = 0.01
 # At which epoch learning rate is decay by 10.
 SCHEDULE = [12, 20, 28]
 MOMENTUM = 0.8
+PATIENCE = 6
 
-EPOCHS = 36
+START_EPOCH = 0
+EPOCHS = 512
 BATCH_SIZE = 20
 MODEL_NAME = 'ssd_resnet50_v2'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
 
+# For inference
 TEST_IMAGE_PATH = 'images/test_image_1.jpg'
 
 SSD_CONFIG = {

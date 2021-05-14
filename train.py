@@ -6,7 +6,8 @@ from config import *
 from utils.losses import SSDLoss
 # from utils.pipelines import WiderFacePipeline
 from utils.datasets import WiderFaceDataset
-from utils.callbacks import LearningRateScheduler
+# from utils.callbacks import LearningRateScheduler
+from utils.callbacks import AdvancedEarlyStopping
 import models.ssd as ssd
 
 # Configure environment
@@ -26,7 +27,7 @@ if gpus:
         # Memory growth must be set before GPUs have been initialized
         print(e)
 
-start_epoch = 0
+start_epoch = START_EPOCH
 epochs = EPOCHS
 batch_size = BATCH_SIZE
 
@@ -115,7 +116,8 @@ checkpoint = ModelCheckpoint(
 )
 
 # Auto-decay learning rate
-lr_scheduler = LearningRateScheduler(SCHEDULE)
+# lr_scheduler = LearningRateScheduler(SCHEDULE)
+lr_scheduler = AdvancedEarlyStopping(patience=PATIENCE, filter_order=5, decay_rate=10, min_lr=1e-8, log_dir=log_dir)
 
 
 # Start training

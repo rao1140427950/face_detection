@@ -27,7 +27,7 @@ net.model.compile(
 # Load weights from checkpoints
 # checkpoint_path = 'None'
 # checkpoint_path = WORK_DIR + '/checkpoint-' + MODEL_NAME + '.h5'
-checkpoint_path = WORK_DIR + '/checkpoint-ssd_resnet50_v2-04-4.71.h5'
+checkpoint_path = WORK_DIR + '/checkpoint-ssd_resnet50_v2-63-2.87.h5'
 weight_file = WORK_DIR + '/' + MODEL_NAME + '_weights.h5'
 if os.path.exists(weight_file):
     net.load_weights(weight_file)
