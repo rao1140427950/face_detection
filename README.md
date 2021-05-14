@@ -12,7 +12,7 @@
 ### TODOs:
 - Optimize input data pipeline. (Done)
 - How to detect small faces.
+- Add data argumentation methods.
 
 ### Logs:
 - Optimize input data pipeline. Now data generator can be seperated from training and run on a different device. Fix OOM while training.
-- Add data argumentation methods.
