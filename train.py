@@ -40,8 +40,39 @@ output_model_file = WORK_DIR + '/' + model_name + '.h5'
 weight_file = WORK_DIR + '/' + model_name + '_weights.h5'
 checkpoint_path = WORK_DIR + '/checkpoint-' + model_name + '.h5'
 
+def create_datasets():
+    train_dataset = WiderFaceDataset(
+        SSD_CONFIG,
+        txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
+        image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
+        argument=False,
+        batch_size=batch_size
+    )
+
+    val_dataset = WiderFaceDataset(
+        SSD_CONFIG,
+        txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
+        image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
+        argument=False,
+        batch_size=batch_size
+    )
+
+    _train_samples = train_dataset.generate_dataset_from_imagefile()
+    _val_samples = val_dataset.generate_dataset_from_imagefile()
+    return _train_samples, _val_samples
+
+# Build data pipeline
+if DATA_PIPELINE is not None:
+    with tf.device(DATA_PIPELINE):
+        train_samples, val_samples = create_datasets()
+else:
+    train_samples, val_samples = create_datasets()
+
 # For multi-gpu training
-strategy = tf.distribute.MirroredStrategy()
+if TRAINING_PIPELINE is not None:
+    strategy = tf.distribute.MirroredStrategy(TRAINING_PIPELINE)
+else:
+    strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
     if MODEL == 'ssd_resnet50':
         net = ssd.SSD_ResNet50(
@@ -69,22 +100,6 @@ if os.path.exists(weight_file):
 else:
     print('No weights file found. Skip loading weights.')
 
-# Build data pipeline
-train_dataset = WiderFaceDataset(
-    SSD_CONFIG,
-    txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
-    image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
-    argument=False,
-    batch_size=batch_size
-)
-
-val_dataset = WiderFaceDataset(
-    SSD_CONFIG,
-    txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
-    image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
-    argument=False,
-    batch_size=batch_size
-)
 
 # Tensorboard
 tensorboard = TensorBoard(log_dir=log_dir, write_images=False)
@@ -102,8 +117,6 @@ checkpoint = ModelCheckpoint(
 # Auto-decay learning rate
 lr_scheduler = LearningRateScheduler(SCHEDULE)
 
-train_samples = train_dataset.generate_dataset_from_imagefile()
-val_samples = val_dataset.generate_dataset_from_imagefile()
 
 # Start training
 model.fit(

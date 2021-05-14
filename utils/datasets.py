@@ -97,6 +97,9 @@ class WiderFaceDataset:
                     boxes.append([eval(bbox[0]), eval(bbox[1]), eval(bbox[2]), eval(bbox[3])])
                 else:
                     warnings.warn('File `{}` has bbox which has 0 width or height.'.format(filename))
+            if len(boxes) == 0:
+                warnings.warn('File `{}` has no valid bbox.'.format(filename))
+                continue
             filename = os.path.join(self._image_root_dir, filename)
             if os.path.exists(filename):
                 annos.append([filename, boxes])
@@ -182,6 +185,22 @@ class WiderFaceDataset:
 
 
 
+# os.environ['CUDA_VISIBLE_DEVICES'] = '9'
+# tf.config.threading.set_inter_op_parallelism_threads(6)
+# tf.config.threading.set_intra_op_parallelism_threads(6)
+#
+# gpus = tf.config.experimental.list_physical_devices('GPU')
+# if gpus:
+#     try:
+#         # Currently, memory growth needs to be the same across GPUs
+#         for gpu in gpus:
+#             tf.config.experimental.set_memory_growth(gpu, True)
+#         logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+#         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+#     except RuntimeError as e:
+#         # Memory growth must be set before GPUs have been initialized
+#         print(e)
+
 
 if __name__ == '__main__':
     ssd = SSD_ResNet50()
@@ -207,4 +226,4 @@ if __name__ == '__main__':
             print(np.shape(lb))
             img = trans.restore_normalized_image_to01(img)
             # img += 0.5
-            _show(img)
+            # _show(img)

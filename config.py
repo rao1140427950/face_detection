@@ -1,6 +1,16 @@
-GPU = '9'
+# The ID of visible GPUs for training
+GPU = '7, 8, 9'
 
-N_WORKERS = 4
+# Specify device for generating data pipeline
+# If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
+# If DATA_PIPELINE = None, training and validation data is generated on default device.
+DATA_PIPELINE = 'GPU:0'
+# Specify device for training procedure
+# It's better to generate data pipeline on a seperate device. i.e. using 2 or more GPUs for
+# training, and using 1 independent device for data pipeline. If data pipeline and training are
+# done on the same device (set DATA_PIPELINE = None), BATCH_SIZE should be set to a much smaller
+# value to avoid OOM.
+TRAINING_PIPELINE = ['GPU:1', 'GPU:2']
 
 IMAGE_SIZE = 512
 
@@ -9,11 +19,12 @@ MODEL = 'ssd_resnet50'
 L2_REG = 0.0008
 
 INIT_LR = 0.01
+# At which epoch learning rate is decay by 10.
 SCHEDULE = [4, 12, 20]
 MOMENTUM = 0.8
 
 EPOCHS = 26
-BATCH_SIZE = 6
+BATCH_SIZE = 20
 MODEL_NAME = 'ssd_resnet50'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
