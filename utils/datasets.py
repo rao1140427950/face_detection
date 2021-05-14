@@ -40,18 +40,11 @@ class WiderFaceDataset:
 
         self._argument = argument
         self._num_parallel_calls = 4
-        self._read_buffer_size = 256 * (1024 * 1024)
-        self._tfrecords_shuffle_buffer_size = 512
         self._batch_size = batch_size
-        self._prefetch_buffer_size = 16
+        self._prefetch_buffer_size = 6
         self._index_dataset = None
         self._image_dataset = None
         self._batch_dataset = None
-        self._raw_image_dataset = None
-        self._shuffle_image_dataset = None
-        self._parsed_image_dataset = None
-        self._decoded_image_dataset = None
-        self._encoded_dataset = None
 
         self._anchors = generate_anchors(encoder_config)
 
@@ -184,24 +177,6 @@ class WiderFaceDataset:
         return self._batch_dataset
 
 
-
-# os.environ['CUDA_VISIBLE_DEVICES'] = '9'
-# tf.config.threading.set_inter_op_parallelism_threads(6)
-# tf.config.threading.set_intra_op_parallelism_threads(6)
-#
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#     try:
-#         # Currently, memory growth needs to be the same across GPUs
-#         for gpu in gpus:
-#             tf.config.experimental.set_memory_growth(gpu, True)
-#         logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-#     except RuntimeError as e:
-#         # Memory growth must be set before GPUs have been initialized
-#         print(e)
-
-
 if __name__ == '__main__':
     ssd = SSD_ResNet50()
     dataset = WiderFaceDataset(
@@ -226,4 +201,4 @@ if __name__ == '__main__':
             print(np.shape(lb))
             img = trans.restore_normalized_image_to01(img)
             # img += 0.5
-            # _show(img)
+            _show(img)
