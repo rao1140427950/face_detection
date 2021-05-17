@@ -44,16 +44,16 @@ checkpoint_path = WORK_DIR + '/checkpoint-' + model_name + '-{epoch:02d}-{val_lo
 def create_datasets():
     train_dataset = WiderFaceDataset(
         SSD_CONFIG,
-        txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt',
-        image_root_dir='/home/raosj/datasets/wider_face/WIDER_train/images',
+        txt_annos_path=TRAINING_ANNOS_PATH,
+        image_root_dir=TRAINING_IMAGES_DIR,
         argument=True,
         batch_size=batch_size
     )
 
     val_dataset = WiderFaceDataset(
         SSD_CONFIG,
-        txt_annos_path='/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt',
-        image_root_dir='/home/raosj/datasets/wider_face/WIDER_val/images',
+        txt_annos_path=VALIDATION_ANNOS_PATH,
+        image_root_dir=VALIDATION_IMAGES_DIR,
         argument=False,
         batch_size=batch_size
     )
@@ -77,6 +77,11 @@ else:
 with strategy.scope():
     if MODEL == 'ssd_resnet50':
         net = ssd.SSD_ResNet50(
+            input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=l2(L2_REG),
+        )
+    elif MODEL == 'ssd_resnet101':
+        net = ssd.SSD_ResNet101(
             input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
             kernel_regularizer=l2(L2_REG),
         )

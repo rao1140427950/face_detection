@@ -1,5 +1,5 @@
 # The ID of visible GPUs for training
-GPU = '7, 8, 9'
+GPU = '6, 7, 8, 9'
 
 # Specify device for generating data pipeline
 # If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
@@ -10,7 +10,7 @@ DATA_PIPELINE = 'GPU:0'
 # training, and using 1 independent device for data pipeline. If data pipeline and training are
 # done on the same device (set DATA_PIPELINE = None), BATCH_SIZE should be set to a much smaller
 # value to avoid OOM.
-TRAINING_PIPELINE = ['GPU:1', 'GPU:2']
+TRAINING_PIPELINE = ['GPU:1', 'GPU:2', 'GPU:3']
 
 IMAGE_SIZE = 512
 
@@ -26,14 +26,24 @@ PATIENCE = 6
 
 START_EPOCH = 0
 EPOCHS = 512
-BATCH_SIZE = 20
-MODEL_NAME = 'ssd_resnet50_v2'
+BATCH_SIZE = 21
+MODEL_NAME = 'ssd_resnet50'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
-PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
+# Dataset dir
+TRAINING_ANNOS_PATH = '/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt'
+TRAINING_IMAGES_DIR = '/home/raosj/datasets/wider_face/WIDER_train/images'
+VALIDATION_ANNOS_PATH = '/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt'
+VALIDATION_IMAGES_DIR = '/home/raosj/datasets/wider_face/WIDER_val/images'
+
+PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet'
 
 # For inference
-TEST_IMAGE_PATH = 'images/test_image_1.jpg'
+TEST_IMAGE_PATH = 'images/test_image_2.jpg'
+CONF_THRESH = 0.5
+
+# For evaluation
+EVALUATION_RESULTS_DIR = 'evaluation_results'
 
 SSD_CONFIG = {
         'img_height': IMAGE_SIZE,
