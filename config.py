@@ -26,8 +26,8 @@ PATIENCE = 6
 
 START_EPOCH = 0
 EPOCHS = 512
-BATCH_SIZE = 21
-MODEL_NAME = 'ssd_resnet50'
+BATCH_SIZE = 18
+MODEL_NAME = 'ssd_resnet50_v3'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
 # Dataset dir
@@ -40,6 +40,7 @@ PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet
 
 # For inference
 TEST_IMAGE_PATH = 'images/test_image_2.jpg'
+TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v3-152-3.13.h5'
 CONF_THRESH = 0.5
 
 # For evaluation
@@ -53,11 +54,11 @@ SSD_CONFIG = {
         'n_classes': 1,
         'min_scale': None,
         'max_scale': None,
-        'scales': [0.04, 0.1, 0.26, 0.45, 0.58],
-        'aspect_ratios_per_layer': [[1.0, 2.0, 0.5],
-                                    [1.0, 2.0, 0.5],
-                                    [1.0, 2.0, 0.5],
-                                    [1.0, 2.0, 0.5]],
+        'scales': [0.02, 0.05, 0.12, 0.28, 0.60],
+        'aspect_ratios_per_layer': [[1.0, 2.0, 3.0],
+                                    [1.0, 2.0, 3.0],
+                                    [1.0, 2.0, 3.0],
+                                    [1.0, 2.0, 3.0]],
         'two_boxes_for_ar1': True,
         'steps': [4, 8, 16, 32],
         'variances': [0.1, 0.2],
