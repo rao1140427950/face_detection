@@ -83,7 +83,7 @@ def inference_single_imagefile(_net, _image_path, _print=False, _show=False, _th
 
     if _print:
         np.set_printoptions(precision=2, suppress=True, linewidth=90)
-        print("Predicted boxes:\n")
+        print("Find %d boxes:\n" % len(y_pred))
         print('   class   conf xmin   ymin   xmax   ymax')
         print(y_pred)
 
