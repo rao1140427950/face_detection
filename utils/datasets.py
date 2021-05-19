@@ -166,6 +166,8 @@ class WiderFaceDataset:
             return self._process_single_image_with_bboxes(image, boxes)
 
         imag, bbox = tf.py_function(py_map_single_index, inp=[index], Tout=(tf.float32, tf.float32))
+        imag = tf.reshape(imag, self._image_size + (3,))
+        bbox = tf.reshape(bbox, (-1, 6))
         return tf.cast(imag, tf.float32), tf.cast(bbox, tf.float32)
 
     def generate_dataset_from_imagefile(self):
