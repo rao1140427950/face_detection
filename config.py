@@ -27,20 +27,21 @@ PATIENCE = 6
 START_EPOCH = 0
 EPOCHS = 512
 BATCH_SIZE = 18
-MODEL_NAME = 'ssd_resnet50_v3'
+MODEL_NAME = 'ssd_resnet50_v4'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
 # Dataset dir
-TRAINING_ANNOS_PATH = '/home/raosj/datasets/wider_face/wider_face_split/wider_face_train_bbx_gt.txt'
-TRAINING_IMAGES_DIR = '/home/raosj/datasets/wider_face/WIDER_train/images'
-VALIDATION_ANNOS_PATH = '/home/raosj/datasets/wider_face/wider_face_split/wider_face_val_bbx_gt.txt'
-VALIDATION_IMAGES_DIR = '/home/raosj/datasets/wider_face/WIDER_val/images'
+DATA_ROOT_DIR = '/home/raosj/datasets/wider_face/'
+TRAINING_ANNOS_PATH = DATA_ROOT_DIR + 'wider_face_split/wider_face_train_bbx_gt.txt'
+TRAINING_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_train/images'
+VALIDATION_ANNOS_PATH = DATA_ROOT_DIR + 'wider_face_split/wider_face_val_bbx_gt.txt'
+VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet'
 
 # For inference
 TEST_IMAGE_PATH = 'images/test_image_2.jpg'
-TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v3-152-3.13.h5'
+TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v4-130-2.96.h5'
 CONF_THRESH = 0.5
 
 # For evaluation

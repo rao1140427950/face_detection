@@ -18,3 +18,4 @@
 ### Logs:
 - Optimize input data pipeline. Now data generator can be seperated from training and run on a different device. Fix OOM while training.
 - Change 'scales' and 'aspect_ratios_per_layer' in `SSD_CONFIG` to suit small faces.
+- Add random resize data argumentation method.

@@ -53,6 +53,7 @@ class WiderFaceDataset:
             'hue': 0.05,
             'contrast': 0.15,
             'saturation': 0.15,
+            'shrink': 0.7,
         }
 
         if transform_config is not None:
@@ -112,6 +113,7 @@ class WiderFaceDataset:
         image = tf.image.random_saturation(
             image, 1. - self._transform_config['saturation'], 1. + self._transform_config['saturation']
         )
+        image, boxes = trans.random_shrink(image, boxes, self._transform_config['shrink'])
         return image, boxes, class_id
 
     @staticmethod
