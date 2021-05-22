@@ -29,8 +29,9 @@ def restore_normalized_image_to01(images):
 
 def random_shrink(image_, boxes_, minval):
     h1, w1, c1 = K.int_shape(image_)
-    image_ = tf.image.resize(image_, (tf.cast(h1 * tf.random.uniform(shape=(), minval=minval, maxval=1.), dtype=tf.int16),
-                                      tf.cast(w1*tf.random.uniform(shape=(), minval=minval, maxval=1.), dtype=tf.int16)))
+    image_ = tf.image.resize(image_,
+                             (tf.cast(h1 * tf.random.uniform(shape=(), minval=minval, maxval=1.), dtype=tf.int16),
+                              tf.cast(w1 * tf.random.uniform(shape=(), minval=minval, maxval=1.), dtype=tf.int16)))
     h2, w2, c2 = K.int_shape(image_)
     h_off = tf.cast(tf.random.uniform(shape=(), minval=0, maxval=h1 - h2), dtype=tf.int32)
     w_off = tf.cast(tf.random.uniform(shape=(), minval=0, maxval=w1 - w2), dtype=tf.int32)
@@ -53,8 +54,8 @@ def random_crop(image_, boxes_, minval, maxval=1.):
     h1, w1, c1 = K.int_shape(image_)
     _image = image_
     _boxes = boxes_.copy()
-    h2 = tf.cast(tf.random.uniform(shape=(), minval=minval, maxval= maxval)*h1, dtype=tf.int32)
-    w2 = tf.cast(tf.random.uniform(shape=(), minval=minval, maxval= maxval)*w1, dtype=tf.int32)
+    h2 = tf.cast(tf.random.uniform(shape=(), minval=minval, maxval= maxval) * h1, dtype=tf.int32)
+    w2 = tf.cast(tf.random.uniform(shape=(), minval=minval, maxval= maxval) * w1, dtype=tf.int32)
     h_off = tf.cast(tf.random.uniform(shape=(), minval=0., maxval= tf.cast(h1 - h2, tf.float32)), dtype=tf.int32)
     w_off = tf.cast(tf.random.uniform(shape=(), minval=0., maxval= tf.cast(w1 - w2, tf.float32)), dtype=tf.int32)
     image_ = tf.image.crop_to_bounding_box(image_, offset_height=h_off, offset_width=w_off, target_height=h2,
@@ -88,8 +89,8 @@ def random_shift(image_, boxes_, maxval):
     h1, w1, c1 = K.int_shape(image_)
     _image = image_
     _boxes = boxes_.copy()
-    h_off = tf.cast(tf.random.uniform(shape=(), minval=-maxval, maxval=maxval*h1), dtype=tf.int32)
-    w_off = tf.cast(tf.random.uniform(shape=(), minval=-maxval, maxval=maxval*w1), dtype=tf.int32)
+    h_off = tf.cast(tf.random.uniform(shape=(), minval=-maxval, maxval=maxval * h1), dtype=tf.int32)
+    w_off = tf.cast(tf.random.uniform(shape=(), minval=-maxval, maxval=maxval * w1), dtype=tf.int32)
     h_off = K.eval(h_off)
     w_off = K.eval(w_off)
     h1 = K.eval(h1)
@@ -98,7 +99,7 @@ def random_shift(image_, boxes_, maxval):
     w_off = K.eval(w_off)
     if h_off > 0 and w_off > 0 :
         image_ = tf.image.crop_to_bounding_box(image_, offset_height=h_off, offset_width=w_off, target_height=h1 - h_off,
-                                               target_width=w1-w_off)
+                                               target_width=w1 - w_off)
         image_ = tf.image.pad_to_bounding_box(image_, 0, 0, h1, w1)
 
     elif h_off > 0 and w_off <= 0 :
@@ -123,6 +124,11 @@ def random_shift(image_, boxes_, maxval):
     index2 = boxes_[:, 1] == boxes_[:, 3]
     index = np.bitwise_or(index1, index2)
     boxes_ = np.delete(boxes_, index, axis=0)
+
+    if len(boxes_) == 0:
+        image_ = _image
+        boxes_ = _boxes
+
 
     return image_, boxes_
 

@@ -1,5 +1,5 @@
 # The ID of visible GPUs for training
-GPU = '6, 7, 8, 9'
+GPU = '3, 7, 8, 9'
 
 # Specify device for generating data pipeline
 # If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
@@ -18,15 +18,15 @@ MODEL = 'ssd_resnet50'
 
 L2_REG = 0.0008
 
-INIT_LR = 0.01
+INIT_LR = 0.001
 # At which epoch learning rate is decay by 10.
-SCHEDULE = [12, 20, 28]
+# SCHEDULE = [12, 20, 28]
 MOMENTUM = 0.8
 PATIENCE = 6
 
-START_EPOCH = 0
+START_EPOCH = 140
 EPOCHS = 512
-BATCH_SIZE = 18
+BATCH_SIZE = 24
 MODEL_NAME = 'ssd_resnet50_v4'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
@@ -41,7 +41,7 @@ PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet
 
 # For inference
 TEST_IMAGE_PATH = 'images/test_image_2.jpg'
-TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v4-130-2.96.h5'
+TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v4-210-3.01.h5'
 CONF_THRESH = 0.5
 
 # For evaluation
@@ -63,4 +63,12 @@ SSD_CONFIG = {
         'two_boxes_for_ar1': True,
         'steps': [4, 8, 16, 32],
         'variances': [0.1, 0.2],
+}
+
+TRANS_CONFIG = {
+    'brightness': 0.15,
+    'hue': 0.05,
+    'contrast': 0.15,
+    'saturation': 0.15,
+    'shrink': 0.5,
 }

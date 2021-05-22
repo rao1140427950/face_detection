@@ -47,6 +47,7 @@ def create_datasets():
         txt_annos_path=TRAINING_ANNOS_PATH,
         image_root_dir=TRAINING_IMAGES_DIR,
         argument=True,
+        transform_config=TRANS_CONFIG,
         batch_size=batch_size
     )
 
