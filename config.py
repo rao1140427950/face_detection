@@ -1,5 +1,5 @@
 # The ID of visible GPUs for training
-GPU = '3, 7, 8, 9'
+GPU = '4, 5, 6, 7'
 
 # Specify device for generating data pipeline
 # If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
@@ -14,7 +14,9 @@ TRAINING_PIPELINE = ['GPU:1', 'GPU:2', 'GPU:3']
 
 IMAGE_SIZE = 512
 
-MODEL = 'ssd_resnet50'
+# MODEL = 'ssd_resnet50'
+MODEL = 'ssdfpn_resnet_cbam'
+REPETITIONS = (3, 3, 3, 3)
 
 L2_REG = 0.0008
 
@@ -24,10 +26,10 @@ INIT_LR = 0.001
 MOMENTUM = 0.8
 PATIENCE = 6
 
-START_EPOCH = 140
+START_EPOCH = 0
 EPOCHS = 512
-BATCH_SIZE = 24
-MODEL_NAME = 'ssd_resnet50_v4'
+BATCH_SIZE = 15
+MODEL_NAME = 'ssdfpn_resnet3333_cbam'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
 # Dataset dir
@@ -37,10 +39,10 @@ TRAINING_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_train/images'
 VALIDATION_ANNOS_PATH = DATA_ROOT_DIR + 'wider_face_split/wider_face_val_bbx_gt.txt'
 VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 
-PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet'
+PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
 
 # For inference
-TEST_IMAGE_PATH = 'images/test_image_2.jpg'
+TEST_IMAGE_PATH = 'images/test_image_1.jpg'
 TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v4-210-3.01.h5'
 CONF_THRESH = 0.5
 
@@ -55,11 +57,12 @@ SSD_CONFIG = {
         'n_classes': 1,
         'min_scale': None,
         'max_scale': None,
-        'scales': [0.02, 0.05, 0.12, 0.28, 0.60],
-        'aspect_ratios_per_layer': [[1.0, 2.0, 3.0],
-                                    [1.0, 2.0, 3.0],
-                                    [1.0, 2.0, 3.0],
-                                    [1.0, 2.0, 3.0]],
+        # 'scales': [0.005, 0.008, 0.018, 0.035, 0.28, 0.60],
+        'scales': [0.01, 0.03, 0.08, 0.28, 0.60],
+        'aspect_ratios_per_layer': [[0.9, 1.8, 2.5],
+                                    [0.9, 1.8, 2.5],
+                                    [0.9, 1.8, 2.5],
+                                    [0.9, 1.8, 2.5],],
         'two_boxes_for_ar1': True,
         'steps': [4, 8, 16, 32],
         'variances': [0.1, 0.2],
@@ -70,5 +73,5 @@ TRANS_CONFIG = {
     'hue': 0.05,
     'contrast': 0.15,
     'saturation': 0.15,
-    'shrink': 0.5,
+    'shrink': 0.7,
 }

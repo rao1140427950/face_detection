@@ -147,7 +147,8 @@ class WiderFaceDataset:
         if self._argument:
             image, boxes, class_id = self._transforms(image, boxes, class_id)
 
-        image = tf.image.resize(image, self._image_size)
+        # image = tf.image.resize(image, self._image_size)
+        image, boxes = trans.reize_with_pad(image, boxes, self._image_size[0], self._image_size[1])
         class_id, boxes = compute_target(self._anchors, boxes, class_id)
 
         # To onehot

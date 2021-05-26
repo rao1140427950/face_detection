@@ -22,6 +22,18 @@ def normalize_image(images):
     images -= 1.
     return images
 
+def reize_with_pad(_image, _boxes, target_height, target_width):
+    h1, w1, c1 = K.int_shape(_image)
+    _image = tf.image.resize_with_pad(_image, target_height, target_width)
+    if h1 / w1 < target_height / target_width :
+        _boxes[:, 1] = (_boxes[:, 1] - 0.5) / (target_height * w1) * (h1 * target_width) + 0.5
+        _boxes[:, 3] = (_boxes[:, 3] - 0.5) / (target_height * w1) * (h1 * target_width) + 0.5
+    elif h1 / w1 >= target_height / target_width :
+        _boxes[:, 0] = (_boxes[:, 0] - 0.5) / (target_width * h1) * (w1 * target_height) + 0.5
+        _boxes[:, 2] = (_boxes[:, 2] - 0.5) / (target_width * h1) * (w1 * target_height) + 0.5
+
+    return _image, _boxes
+
 def restore_normalized_image_to01(images):
     images /= 2.
     images += 0.5

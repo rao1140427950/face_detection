@@ -9,6 +9,7 @@ from utils.datasets import WiderFaceDataset
 # from utils.callbacks import LearningRateScheduler
 from utils.callbacks import AdvancedEarlyStopping
 import models.ssd as ssd
+import models.ssd_fpn as ssd_fpn
 
 # Configure environment
 os.environ['CUDA_VISIBLE_DEVICES'] = GPU
@@ -80,11 +81,32 @@ with strategy.scope():
         net = ssd.SSD_ResNet50(
             input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
             kernel_regularizer=l2(L2_REG),
+            config=SSD_CONFIG,
         )
     elif MODEL == 'ssd_resnet101':
         net = ssd.SSD_ResNet101(
             input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
             kernel_regularizer=l2(L2_REG),
+            config=SSD_CONFIG,
+        )
+    elif MODEL == 'ssdfpn_resnet50_cbam':
+        net = ssd_fpn.SSDFPN_ResNet50_CBAM(
+            input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=l2(L2_REG),
+            config=SSD_CONFIG,
+        )
+    elif MODEL == 'ssdfpn_resnet101_cbam':
+        net = ssd_fpn.SSDFPN_ResNet101_CBAM(
+            input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=l2(L2_REG),
+            config=SSD_CONFIG,
+        )
+    elif MODEL == 'ssdfpn_resnet_cbam':
+        net = ssd_fpn.SSDFPN_ResNet_CBAM(
+            input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=l2(L2_REG),
+            repetitions=REPETITIONS,
+            config=SSD_CONFIG,
         )
     else:
         raise ValueError("Unknown model: `{}`.".format(MODEL))
