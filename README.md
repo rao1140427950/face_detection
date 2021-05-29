@@ -1,5 +1,8 @@
 ## Face detection using Keras and Tensorflow 2.x
 
+### Datasets:
+- WiderFace
+
 ### Backbones:
 - ResNet
 - ResNet + CBAM
