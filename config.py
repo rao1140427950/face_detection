@@ -1,16 +1,16 @@
 # The ID of visible GPUs for training
-GPU = '4, 5, 6, 7'
+GPU = '6, 7, 8, 9'
 
 # Specify device for generating data pipeline
 # If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
 # If DATA_PIPELINE = None, training and validation data is generated on default device.
-DATA_PIPELINE = 'GPU:0'
+DATA_PIPELINE = 'GPU:3'
 # Specify device for training procedure
 # It's better to generate data pipeline on a seperate device. i.e. using 2 or more GPUs for
 # training, and using 1 independent device for data pipeline. If data pipeline and training are
 # done on the same device (set DATA_PIPELINE = None), BATCH_SIZE should be set to a much smaller
 # value to avoid OOM.
-TRAINING_PIPELINE = ['GPU:1', 'GPU:2', 'GPU:3']
+TRAINING_PIPELINE = ['GPU:0', 'GPU:1', 'GPU:2']
 
 IMAGE_SIZE = 512
 
@@ -20,7 +20,7 @@ REPETITIONS = (3, 3, 3, 3)
 
 L2_REG = 0.0008
 
-INIT_LR = 0.001
+INIT_LR = 0.01
 # At which epoch learning rate is decay by 10.
 # SCHEDULE = [12, 20, 28]
 MOMENTUM = 0.8
@@ -42,8 +42,8 @@ VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
 
 # For inference
-TEST_IMAGE_PATH = 'images/test_image_1.jpg'
-TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_v4-210-3.01.h5'
+TEST_IMAGE_PATH = 'images/test_image_2.jpg'
+TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssdfpn_resnet3333_cbam-313-4.06.h5'
 CONF_THRESH = 0.5
 
 # For evaluation
@@ -58,7 +58,7 @@ SSD_CONFIG = {
         'min_scale': None,
         'max_scale': None,
         # 'scales': [0.005, 0.008, 0.018, 0.035, 0.28, 0.60],
-        'scales': [0.01, 0.03, 0.08, 0.28, 0.60],
+        'scales': [0.007, 0.03, 0.08, 0.28, 0.60],
         'aspect_ratios_per_layer': [[0.9, 1.8, 2.5],
                                     [0.9, 1.8, 2.5],
                                     [0.9, 1.8, 2.5],

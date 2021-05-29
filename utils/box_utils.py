@@ -1,27 +1,29 @@
 import tensorflow as tf
 
 
-def compute_area(top_left, bot_right):
+def compute_area(top_left, bot_right, max_size=512.0):
     """ Compute area given top_left and bottom_right coordinates
     Args:
         top_left: tensor (num_boxes, 2)
         bot_right: tensor (num_boxes, 2)
+        max_size:
     Returns:
         area: tensor (num_boxes,)
     """
     # top_left: N x 2
     # bot_right: N x 2
-    hw = tf.clip_by_value(bot_right - top_left, 0.0, 512.0)
+    hw = tf.clip_by_value(bot_right - top_left, 0.0, max_size)
     area = hw[..., 0] * hw[..., 1]
 
     return area
 
 
-def compute_iou(boxes_a, boxes_b):
+def compute_iou(boxes_a, boxes_b, max_size=512.0):
     """ Compute overlap between boxes_a and boxes_b
     Args:
         boxes_a: tensor (num_boxes_a, 4)
         boxes_b: tensor (num_boxes_b, 4)
+        max_size:
     Returns:
         overlap: tensor (num_boxes_a, num_boxes_b)
     """
@@ -33,16 +35,16 @@ def compute_iou(boxes_a, boxes_b):
     top_left = tf.math.maximum(boxes_a[..., :2], boxes_b[..., :2])
     bot_right = tf.math.minimum(boxes_a[..., 2:], boxes_b[..., 2:])
 
-    overlap_area = compute_area(top_left, bot_right)
-    area_a = compute_area(boxes_a[..., :2], boxes_a[..., 2:])
-    area_b = compute_area(boxes_b[..., :2], boxes_b[..., 2:])
+    overlap_area = compute_area(top_left, bot_right, max_size)
+    area_a = compute_area(boxes_a[..., :2], boxes_a[..., 2:], max_size)
+    area_b = compute_area(boxes_b[..., :2], boxes_b[..., 2:], max_size)
 
     overlap = overlap_area / (area_a + area_b - overlap_area)
 
     return overlap
 
 
-def compute_target(default_boxes, gt_boxes, gt_labels, iou_threshold=0.5):
+def compute_target(default_boxes, gt_boxes, gt_labels, max_size=512.0, iou_threshold=0.5):
     """ Compute regression and classification targets
     Args:
         default_boxes: tensor (num_default, 4)
@@ -51,6 +53,7 @@ def compute_target(default_boxes, gt_boxes, gt_labels, iou_threshold=0.5):
                   of format (xmin, ymin, xmax, ymax)
         gt_labels: tensor (num_gt,)
         iou_threshold:
+        max_size:
     Returns:
         gt_confs: classification targets, tensor (num_default,)
         gt_locs: regression targets, tensor (num_default, 4)
@@ -58,7 +61,7 @@ def compute_target(default_boxes, gt_boxes, gt_labels, iou_threshold=0.5):
     # Convert default boxes to format (xmin, ymin, xmax, ymax)
     # in order to compute overlap with gt boxes
     transformed_default_boxes = transform_center_to_corner(default_boxes)
-    iou = compute_iou(transformed_default_boxes, gt_boxes)
+    iou = compute_iou(transformed_default_boxes, gt_boxes, max_size)
 
     best_gt_iou = tf.math.reduce_max(iou, 1)
     best_gt_idx = tf.math.argmax(iou, 1)

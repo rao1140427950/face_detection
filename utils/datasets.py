@@ -41,7 +41,7 @@ class WiderFaceDataset:
         self._argument = argument
         self._num_parallel_calls = 4
         self._batch_size = batch_size
-        self._prefetch_buffer_size = 6
+        self._prefetch_buffer_size = 4
         self._index_dataset = None
         self._image_dataset = None
         self._batch_dataset = None
@@ -149,7 +149,7 @@ class WiderFaceDataset:
 
         # image = tf.image.resize(image, self._image_size)
         image, boxes = trans.reize_with_pad(image, boxes, self._image_size[0], self._image_size[1])
-        class_id, boxes = compute_target(self._anchors, boxes, class_id)
+        class_id, boxes = compute_target(self._anchors, boxes, class_id, max(self._image_size) + 0.)
 
         # To onehot
         class_id = tf.one_hot(tf.cast(class_id, tf.int32), 2, dtype=tf.float32)

@@ -10,11 +10,12 @@
 
 ### Known Issues:
 - OOM while training. (Fixed)
+- Still OOM while training with a large batch size or image size, caused by generating anchor boxes.
 
 ### TODOs:
 - Optimize input data pipeline. (Done)
 - How to detect small faces.
-- Add data argumentation methods.
+- Add data argumentation methods. (Done)
 - Analyse distribution of bboxes in WiderFace and optimize `scales` and `aspect_ratios_per_layer`. (Done)
 - Multi-scale training.
 
@@ -26,3 +27,7 @@
 - Add FPN to SSD detector.
 - Analyse distribution of bboxes in dataset and adjust `scales` and `aspect_ratios_per_layer`.
 - Training images now are resized while keeping ratios.
+
+### Test results:
+![image](https://github.com/rao1140427950/face_detection/blob/main/images/test_image_1_results.jpg)
+![image](https://github.com/rao1140427950/face_detection/blob/main/images/test_image_2_results.jpg)
