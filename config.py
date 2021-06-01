@@ -1,16 +1,16 @@
 # The ID of visible GPUs for training
-GPU = '6, 7, 8, 9'
+GPU = '8, 9'
 
 # Specify device for generating data pipeline
 # If DATA_PIPELINE = 'CPU:0', training and validation data is generated on CPU (NOT recommanded).
 # If DATA_PIPELINE = None, training and validation data is generated on default device.
-DATA_PIPELINE = 'GPU:3'
+DATA_PIPELINE = 'GPU:1'
 # Specify device for training procedure
 # It's better to generate data pipeline on a seperate device. i.e. using 2 or more GPUs for
 # training, and using 1 independent device for data pipeline. If data pipeline and training are
 # done on the same device (set DATA_PIPELINE = None), BATCH_SIZE should be set to a much smaller
 # value to avoid OOM.
-TRAINING_PIPELINE = ['GPU:0', 'GPU:1', 'GPU:2']
+TRAINING_PIPELINE = ['GPU:0']
 
 IMAGE_SIZE = 512
 
@@ -28,7 +28,7 @@ PATIENCE = 6
 
 START_EPOCH = 0
 EPOCHS = 512
-BATCH_SIZE = 15
+BATCH_SIZE = 6
 MODEL_NAME = 'ssdfpn_resnet3333_cbam'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
@@ -42,7 +42,7 @@ VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
 
 # For inference
-TEST_IMAGE_PATH = 'images/test_image_2.jpg'
+TEST_IMAGE_PATH = 'images/test_image_1.jpg'
 TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssdfpn_resnet3333_cbam-313-4.06.h5'
 CONF_THRESH = 0.5
 

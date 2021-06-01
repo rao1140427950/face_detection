@@ -1,5 +1,6 @@
 import tensorflow as tf
 import models.ssd as ssd
+import models.ssd_fpn as ssd_fpn
 from utils.losses import SSDLoss
 import os
 import numpy as np
@@ -9,9 +10,16 @@ from inference import inference_single_imagefile
 os.environ['CUDA_VISIBLE_DEVICES'] = '9'
 
 # Build model
+# Build model
 if MODEL == 'ssd_resnet50':
     net = ssd.SSD_ResNet50(
         input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+    )
+elif MODEL == 'ssdfpn_resnet_cbam':
+    net = ssd_fpn.SSDFPN_ResNet_CBAM(
+        input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+        repetitions=REPETITIONS,
+        config=SSD_CONFIG,
     )
 else:
     raise ValueError("Unknown model: `{}`.".format(MODEL))
@@ -24,8 +32,9 @@ net.model.compile(
 # Load weights from checkpoints
 # checkpoint_path = 'None'
 # checkpoint_path = WORK_DIR + '/checkpoint-' + MODEL_NAME + '.h5'
-checkpoint_path = WORK_DIR + '/checkpoint-ssd_resnet50_v2-63-2.87.h5'
-weight_file = WORK_DIR + '/' + MODEL_NAME + '_weights.h5'
+# checkpoint_path = WORK_DIR + '/checkpoint-ssd_resnet50_v2-63-2.87.h5'
+checkpoint_path = WORK_DIR + '/checkpoint.h5'
+weight_file = TEST_MODEL_WEIGHTS
 if os.path.exists(weight_file):
     net.load_weights(weight_file)
     print('Load {}.'.format(weight_file))
