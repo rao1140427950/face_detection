@@ -76,9 +76,11 @@ class WiderFaceDataset:
         f = open(self._txt_annos_path, 'r')
         lines = f.readlines()
         f.close()
+        annos_dict = dict()
         annos = []
         while len(lines) > 0:
             filename = lines.pop(0)[:-1]
+            # print(filename)
             n_boxes = eval(lines.pop(0))
             boxes = []
             if n_boxes == 0:
@@ -94,15 +96,17 @@ class WiderFaceDataset:
             if len(boxes) == 0:
                 warnings.warn('File `{}` has no valid bbox.'.format(filename))
                 continue
-            filename = os.path.join(self._image_root_dir, filename)
-            if os.path.exists(filename):
-                annos.append([filename, boxes])
-            else:
-                warnings.warn('File `{}` not found.'.format(filename))
+            # filename = os.path.join(self._image_root_dir, filename)
+            # if os.path.exists(filename):
+            #     pass
+            # else:
+            #     warnings.warn('File `{}` not found.'.format(filename))
+            annos_dict[filename] = boxes
+            annos.append([filename, boxes])
         self._annos = annos
         self._n_samples = len(annos)
 
-        return annos
+        return annos_dict
 
     # Data argumentation
     def _transforms(self, image, boxes, class_id):

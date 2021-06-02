@@ -30,13 +30,13 @@ START_EPOCH = 0
 EPOCHS = 512
 BATCH_SIZE = 15
 MODEL_NAME = 'ssdfpn_resnet3333_cbam'
-WORK_DIR = '/home/raosj/checkpoints/face_detection'
+WORK_DIR = './'
 
 # Dataset dir
-DATA_ROOT_DIR = '/home/raosj/datasets/wider_face/'
+DATA_ROOT_DIR = '../'
 TRAINING_ANNOS_PATH = DATA_ROOT_DIR + 'wider_face_split/wider_face_train_bbx_gt.txt'
 TRAINING_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_train/images'
-VALIDATION_ANNOS_PATH = DATA_ROOT_DIR + 'wider_face_split/wider_face_val_bbx_gt.txt'
+VALIDATION_ANNOS_PATH = './wider_face_val_bbx_gt.txt'
 VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet50-imagenet'
