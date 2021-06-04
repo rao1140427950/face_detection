@@ -13,8 +13,8 @@ import models.ssd_fpn as ssd_fpn
 
 # Configure environment
 os.environ['CUDA_VISIBLE_DEVICES'] = GPU
-tf.config.threading.set_inter_op_parallelism_threads(6)
-tf.config.threading.set_intra_op_parallelism_threads(6)
+tf.config.threading.set_inter_op_parallelism_threads(8)
+tf.config.threading.set_intra_op_parallelism_threads(8)
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -103,6 +103,13 @@ with strategy.scope():
         )
     elif MODEL == 'ssdfpn_resnet_cbam':
         net = ssd_fpn.SSDFPN_ResNet_CBAM(
+            input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=l2(L2_REG),
+            repetitions=REPETITIONS,
+            config=SSD_CONFIG,
+        )
+    elif MODEL == 'ssdfpn_resnet':
+        net = ssd_fpn.SSDFPN_ResNet(
             input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
             kernel_regularizer=l2(L2_REG),
             repetitions=REPETITIONS,

@@ -118,6 +118,8 @@ if __name__ == '__main__':
     if MODEL == 'ssd_resnet50':
         net = ssd.SSD_ResNet50(
             input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+            kernel_regularizer=tf.keras.regularizers.l2(L2_REG),
+            config=SSD_CONFIG,
         )
     elif MODEL == 'ssdfpn_resnet_cbam':
         net = ssd_fpn.SSDFPN_ResNet_CBAM(

@@ -39,9 +39,9 @@ class WiderFaceDataset:
         self._image_size = encoder_config['image_size']
 
         self._argument = argument
-        self._num_parallel_calls = 4
+        self._num_parallel_calls = 6
         self._batch_size = batch_size
-        self._prefetch_buffer_size = 4
+        self._prefetch_buffer_size = 16
         self._index_dataset = None
         self._image_dataset = None
         self._batch_dataset = None

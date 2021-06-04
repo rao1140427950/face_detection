@@ -6,6 +6,7 @@ from tensorflow.keras.backend import int_shape
 sys.path.append('..')
 from utils.model import Model
 from backbones.resnet_cbam import ResNet_CBAM
+from backbones.resnet import ResNet
 from models.ssd import SSDHead
 
 
@@ -100,6 +101,72 @@ class SSDFPN_ResNet101_CBAM(SSDFPN_ResNet_CBAM):
             kernel_regularizer=kernel_regularizer,
             config=config
         )
+
+class SSDFPN_ResNet(SSDHead):
+
+    def __init__(
+            self,
+            input_shape=(512, 512, 3),
+            repetitions=(3, 4, 6, 3),
+            kernel_regularizer=l2(0.0008),
+            config=None,
+    ):
+        aspect_ratios_per_layer = [[1.0, 2.0, 0.5],
+                                   [1.0, 2.0, 0.5],
+                                   [1.0, 2.0, 0.5],
+                                   [1.0, 2.0, 0.5],
+                                   [1.0, 2.0, 0.5]]
+        resnet = ResNet(
+            input_shape=input_shape,
+            kernel_regularizer=kernel_regularizer,
+            repetitions=repetitions,
+        )
+        fpn = FPN(
+            backbone=resnet,
+            n_dims=128,
+            kernel_regularizer=kernel_regularizer,
+        )
+        super().__init__(
+            backbone=fpn,
+            n_classes=1,
+            aspect_ratios_per_layer=aspect_ratios_per_layer,
+            l2_regularization=0.0005,
+            two_boxes_for_ar1=True,
+            config=config,
+        )
+
+class SSDFPN_ResNet50(SSDFPN_ResNet):
+
+    def __init__(
+            self,
+            input_shape=(512, 512, 3),
+            kernel_regularizer=l2(0.0008),
+            config=None,
+    ):
+        super().__init__(
+            input_shape=input_shape,
+            repetitions=(3, 4, 6, 3),
+            kernel_regularizer=kernel_regularizer,
+            config=config
+        )
+
+
+
+class SSDFPN_ResNet101(SSDFPN_ResNet):
+
+    def __init__(
+            self,
+            input_shape=(512, 512, 3),
+            kernel_regularizer=l2(0.0008),
+            config=None,
+    ):
+        super().__init__(
+            input_shape=input_shape,
+            repetitions=(3, 4, 23, 3),
+            kernel_regularizer=kernel_regularizer,
+            config=config
+        )
+
 
 
 if __name__ == '__main__':

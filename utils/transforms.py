@@ -40,6 +40,8 @@ def restore_normalized_image_to01(images):
     return images
 
 def random_shrink(image_, boxes_, minval):
+    if minval >= 1.:
+        return image_, boxes_
     h1, w1, c1 = K.int_shape(image_)
     image_ = tf.image.resize(image_,
                              (tf.cast(h1 * tf.random.uniform(shape=(), minval=minval, maxval=1.), dtype=tf.int16),
