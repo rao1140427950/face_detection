@@ -34,3 +34,4 @@
 ### Test results:
 ![image](https://github.com/rao1140427950/face_detection/blob/main/images/test_image_1_results.png?raw=true)
 ![image](https://github.com/rao1140427950/face_detection/blob/main/images/test_image_2_results.png?raw=true)
+![image](https://github.com/rao1140427950/face_detection/blob/main/images/myplot704.png?raw=true)
