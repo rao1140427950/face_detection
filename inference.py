@@ -103,7 +103,7 @@ def inference_single_imagefile(_net, _image_path, _print=False, _show=False, _th
             ymax = box[5]
             # label = '{}: {:.2f}'.format(classes[int(box[0])], box[1])
             current_axis.add_patch(
-                plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, color=(0., 0.9, 0.), fill=False, linewidth=2))
+                plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, color=(0., 0.9, 0.), fill=False, linewidth=1.5))
             # current_axis.text(xmin, ymin, label, size='x-small', color='white', bbox={'facecolor': (0., 0.9, 0.), 'alpha': 1.0})
 
         plt.show()

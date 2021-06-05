@@ -12,9 +12,9 @@ DATA_PIPELINE = 'GPU:0'
 # value to avoid OOM.
 TRAINING_PIPELINE = ['GPU:1', 'GPU:2', 'GPU:3']
 
-IMAGE_SIZE = 512
+IMAGE_SIZE = 1024
 
-MODEL = 'ssdfpn_resnet'
+MODEL = 'ssdfpn_resnet_cbam'
 # MODEL = 'ssdfpn_resnet_cbam'
 REPETITIONS = (3, 3, 3, 3)
 
@@ -28,7 +28,7 @@ PATIENCE = 6
 
 START_EPOCH = 0
 EPOCHS = 512
-BATCH_SIZE = 6
+BATCH_SIZE = 15
 MODEL_NAME = 'ssdfpn_resnet3333'
 WORK_DIR = '/home/raosj/checkpoints/face_detection'
 
@@ -42,9 +42,9 @@ VALIDATION_IMAGES_DIR = DATA_ROOT_DIR + 'WIDER_val/images'
 PRE_TRAINED_WEIGHTS = '/home/raosj/pretrained-weights/weights-resnet101-imagenet'
 
 # For inference
-TEST_IMAGE_PATH = 'images/test_image_2.jpg'
-TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssd_resnet50_argu-82-3.83.h5'
-CONF_THRESH = 0.5
+TEST_IMAGE_PATH = 'images/selfie.jpg'
+TEST_MODEL_WEIGHTS = WORK_DIR + '/checkpoint-ssdfpn_resnet3333_cbam_im704-72-3.15.h5'
+CONF_THRESH = 0.05
 
 # For evaluation
 EVALUATION_RESULTS_DIR = 'evaluation_results'
